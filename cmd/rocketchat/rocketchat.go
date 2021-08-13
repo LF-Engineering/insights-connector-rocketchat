@@ -552,7 +552,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 
 // GetModelData - return data in swagger format
 func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *models.Data) {
-	//endpoint := j.Endpoint()
+	endpoint := j.Endpoint()
 	data = &models.Data{
 		DataSource: RocketchatDataSource,
 		MetaData:   gRocketchatMetaData,
@@ -583,6 +583,13 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		if sBody != "" {
 			body = &sBody
 		}
+		chanIID, _ := doc["channel_id"].(string)
+		chanCreatedAt, _ := doc["channel_created_at"].(time.Time)
+		chanUpdatedAt, _ := doc["channel_updated_at"].(time.Time)
+		chanName, _ := doc["channel_name"].(string)
+		chanTopic, _ := doc["channel_topic"].(string)
+		chanMsgs, _ := doc["channel_num_messages"].(float64)
+		chanUsers, _ := doc["channel_num_users"].(float64)
 		createdOn, _ := doc["created_at"].(time.Time)
 		updatedOn, _ := doc["updated_at"].(time.Time)
 		gMaxUpstreamDtMtx.Lock()
@@ -612,15 +619,15 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				URLs:       urls,
 				CreatedAt:  strfmt.DateTime(createdOn),
 				Activities: activities,
-				Channel:    &models.Channel{
-					//CreatedAt strfmt.DateTime `json:"CreatedAt,omitempty"`
-					//InternalID string `json:"InternalId,omitempty"`
-					//MemberCount int64 `json:"MemberCount,omitempty"`
-					//MessageCount int64 `json:"MessageCount,omitempty"`
-					//Name string `json:"Name,omitempty"`
-					//Slug string `json:"Slug,omitempty"`
-					//Topic string `json:"Topic,omitempty"`
-					//UpdatedAt strfmt.DateTime `json:"UpdatedAt,omitempty"`
+				Channel: &models.Channel{
+					InternalID:   chanIID,
+					CreatedAt:    strfmt.DateTime(chanCreatedAt),
+					UpdatedAt:    strfmt.DateTime(chanUpdatedAt),
+					Slug:         endpoint,
+					MessageCount: int64(chanMsgs),
+					MemberCount:  int64(chanUsers),
+					Name:         chanName,
+					Topic:        chanTopic,
 				},
 			},
 		}
