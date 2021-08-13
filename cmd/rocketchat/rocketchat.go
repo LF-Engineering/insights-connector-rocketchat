@@ -365,6 +365,13 @@ func (j *DSRocketchat) SetChannelInfo(rich, channel map[string]interface{}) {
 			rich["channel_updated_at"] = updated
 		}
 	}
+	iCreated, ok := channel["ts"]
+	if ok {
+		created, err := shared.TimeParseAny(iCreated.(string))
+		if err == nil {
+			rich["channel_created_at"] = created
+		}
+	}
 	rich["channel_num_messages"], _ = channel["msgs"]
 	rich["channel_name"], _ = channel["name"]
 	rich["channel_num_users"], _ = channel["usersCount"]
@@ -466,6 +473,8 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		rich["edited_by_user_id"], _ = editor["_id"]
 		rich["is_edited"] = 1
 	}
+	// If file is present then a given message is not a message but file attachment
+	// attachments is also present is such cases
 	iFile, ok := message["file"]
 	if ok {
 		file, _ := iFile.(map[string]interface{})
@@ -473,6 +482,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		rich["file_name"], _ = file["name"]
 		rich["file_type"], _ = file["type"]
 	}
+	// if present - they will contain an array of user _id values
 	iReplies, ok := message["replies"]
 	if ok {
 		replies, ok := iReplies.([]interface{})
@@ -485,12 +495,22 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		rich["replies"] = 0
 	}
 	rich["total_reactions"] = 0
+	/*
+	  "reactions": {
+	    ":handshake:": {
+	      "usernames": [
+	        "rjones"
+	      ]
+	    }
+	  }
+	*/
 	iReactions, ok := message["reactions"]
 	if ok {
 		reactions, _ := iReactions.(map[string]interface{})
 		rich["reactions"], rich["total_reactions"] = j.GetReactions(reactions)
 	}
 	rich["total_mentions"] = 0
+	// array of { _id username } objects
 	iMentions, ok := message["mentions"]
 	if ok {
 		mentions, _ := iMentions.([]interface{})

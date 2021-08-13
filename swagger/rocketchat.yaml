@@ -87,6 +87,10 @@ definitions:
         type: integer
         description: this looks like a compute field - do we really need it? We can calculate this from RDS.
         example: 10
+      CreatedAt:
+        type: string
+        format: date-time
+        example: '2019-09-02 03:00:33.000000'
       UpdatedAt:
         type: string
         format: date-time
