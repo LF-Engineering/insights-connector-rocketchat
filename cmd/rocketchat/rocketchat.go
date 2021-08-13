@@ -11,6 +11,7 @@ import (
 
 	neturl "net/url"
 
+	"github.com/LF-Engineering/dev-analytics-libraries/emoji"
 	"github.com/LF-Engineering/insights-datasource-rocketchat/gen/models"
 	shared "github.com/LF-Engineering/insights-datasource-shared"
 	jsoniter "github.com/json-iterator/go"
@@ -350,124 +351,166 @@ func (j *DSRocketchat) AddMetadata(ctx *shared.Ctx, item interface{}) (mItem map
 	return
 }
 
+// SetChannelInfo - set rich channel info from raw channel info
+func (j *DSRocketchat) SetChannelInfo(rich, channel map[string]interface{}) {
+	rich["channel_id"], _ = channel["_id"]
+	iUpdated, ok := channel["_updatedAt"]
+	if ok {
+		updated, err := shared.TimeParseAny(iUpdated.(string))
+		if err == nil {
+			rich["channel_updated_at"] = updated
+		}
+	}
+	rich["channel_num_messages"], _ = channel["msgs"]
+	rich["channel_name"], _ = channel["name"]
+	rich["channel_num_users"], _ = channel["usersCount"]
+	rich["channel_topic"], _ = channel["topic"]
+	rich["avatar"], _ = shared.Dig(channel, []string{"lastMessage", "avatar"}, false, true)
+}
+
+// GetMentions - convert raw mentions to rich mentions
+func (j *DSRocketchat) GetMentions(mentions []interface{}) (richMentions []map[string]interface{}) {
+	for _, iUsr := range mentions {
+		usr, _ := iUsr.(map[string]interface{})
+		userName, _ := usr["username"]
+		id, _ := usr["_id"]
+		name, _ := usr["name"]
+		richMentions = append(richMentions, map[string]interface{}{
+			"username": userName,
+			"id":       id,
+			"name":     name,
+		})
+	}
+	return
+}
+
+// GetReactions - convert raw reactions to rich reactions
+func (j *DSRocketchat) GetReactions(reactions map[string]interface{}) (richReactions []map[string]interface{}, nReactions int) {
+	for reactionType, iReactionData := range reactions {
+		reactionData, _ := iReactionData.(map[string]interface{})
+		userNames := []interface{}{}
+		names := []interface{}{}
+		iUserNames, ok := reactionData["usernames"]
+		if ok {
+			userNames, _ = iUserNames.([]interface{})
+		}
+		iNames, ok := reactionData["names"]
+		if ok {
+			names, _ = iNames.([]interface{})
+		}
+		data := emoji.GetEmojiUnicode(reactionType)
+		nUserNames := len(userNames)
+		richReactions = append(richReactions, map[string]interface{}{
+			"type":     reactionType,
+			"emoji":    data,
+			"username": userNames,
+			"names":    names,
+			"count":    nUserNames,
+		})
+		nReactions += nUserNames
+	}
+	return
+}
+
 // EnrichItem - return rich item from raw item for a given author type
 func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) (rich map[string]interface{}, err error) {
-	// FIXME
-	jsonBytes, _ := jsoniter.Marshal(item)
-	shared.Printf("%s\n", string(jsonBytes))
+	//jsonBytes, _ := jsoniter.Marshal(item)
+	//shared.Printf("%s\n", string(jsonBytes))
 	rich = make(map[string]interface{})
-	// FIXME
-	/*
-		for _, field := range RawFields {
-			v, _ := item[field]
-			rich[field] = v
-		}
-		message, ok := item["data"].(map[string]interface{})
-		if !ok {
-			err = fmt.Errorf("missing data field in item %+v", DumpKeys(item))
-			return
-		}
-		msg, _ := message["msg"]
-		rich["msg_analyzed"] = msg
-		rich["msg"] = msg
-		rich["rid"], _ = message["rid"]
-		rich["msg_id"], _ = message["_id"]
-		rich["msg_parent"], _ = message["parent"]
-		iAuthor, ok := message["u"]
+	for _, field := range shared.RawFields {
+		v, _ := item[field]
+		rich[field] = v
+	}
+	message, ok := item["data"].(map[string]interface{})
+	if !ok {
+		err = fmt.Errorf("missing data field in item %+v", shared.DumpKeys(item))
+		return
+	}
+	msg, _ := message["msg"]
+	rich["msg_analyzed"] = msg
+	rich["msg"] = msg
+	rich["rid"], _ = message["rid"]
+	rich["msg_id"], _ = message["_id"]
+	rich["msg_parent"], _ = message["parent"]
+	iAuthor, ok := message["u"]
+	if ok {
+		author, _ := iAuthor.(map[string]interface{})
+		rich["user_id"], _ = author["_id"]
+		rich["user_name"], _ = author["name"]
+		rich["user_username"], _ = author["username"]
+	}
+	rich["is_edited"] = 0
+	iEditor, ok := message["editedBy"]
+	if ok {
+		editor, _ := iEditor.(map[string]interface{})
+		iEdited, ok := editor["editedAt"]
 		if ok {
-			author, _ := iAuthor.(map[string]interface{})
-			rich["user_id"], _ = author["_id"]
-			rich["user_name"], _ = author["name"]
-			rich["user_username"], _ = author["username"]
-		}
-		rich["is_edited"] = 0
-		iEditor, ok := message["editedBy"]
-		if ok {
-			editor, _ := iEditor.(map[string]interface{})
-			iEdited, ok := editor["editedAt"]
-			if ok {
-				edited, err := TimeParseAny(iEdited.(string))
-				if err == nil {
-					rich["edited_at"] = edited
-				}
+			edited, err := shared.TimeParseAny(iEdited.(string))
+			if err == nil {
+				rich["edited_at"] = edited
 			}
-			rich["edited_by_username"], _ = editor["username"]
-			rich["edited_by_user_id"], _ = editor["_id"]
-			rich["is_edited"] = 1
 		}
-		iFile, ok := message["file"]
+		rich["edited_by_username"], _ = editor["username"]
+		rich["edited_by_user_id"], _ = editor["_id"]
+		rich["is_edited"] = 1
+	}
+	iFile, ok := message["file"]
+	if ok {
+		file, _ := iFile.(map[string]interface{})
+		rich["file_id"], _ = file["_id"]
+		rich["file_name"], _ = file["name"]
+		rich["file_type"], _ = file["type"]
+	}
+	iReplies, ok := message["replies"]
+	if ok {
+		replies, ok := iReplies.([]interface{})
 		if ok {
-			file, _ := iFile.(map[string]interface{})
-			rich["file_id"], _ = file["_id"]
-			rich["file_name"], _ = file["name"]
-			rich["file_type"], _ = file["type"]
-		}
-		iReplies, ok := message["replies"]
-		if ok {
-			replies, ok := iReplies.([]interface{})
-			if ok {
-				rich["replies"] = len(replies)
-			} else {
-				rich["replies"] = 0
-			}
+			rich["replies"] = len(replies)
 		} else {
 			rich["replies"] = 0
 		}
-		rich["total_reactions"] = 0
-		iReactions, ok := message["reactions"]
-		if ok {
-			reactions, _ := iReactions.(map[string]interface{})
-			rich["reactions"], rich["total_reactions"] = j.GetReactions(reactions)
+	} else {
+		rich["replies"] = 0
+	}
+	rich["total_reactions"] = 0
+	iReactions, ok := message["reactions"]
+	if ok {
+		reactions, _ := iReactions.(map[string]interface{})
+		rich["reactions"], rich["total_reactions"] = j.GetReactions(reactions)
+	}
+	rich["total_mentions"] = 0
+	iMentions, ok := message["mentions"]
+	if ok {
+		mentions, _ := iMentions.([]interface{})
+		mentionsAry := j.GetMentions(mentions)
+		rich["mentions"] = mentionsAry
+		rich["total_mentions"] = len(mentionsAry)
+	}
+	iChannelInfo, ok := message["channel_info"]
+	if ok {
+		channelInfo, _ := iChannelInfo.(map[string]interface{})
+		j.SetChannelInfo(rich, channelInfo)
+	}
+	rich["total_urls"] = 0
+	iURLs, ok := message["urls"]
+	if ok {
+		urls, _ := iURLs.([]interface{})
+		urlsAry := []interface{}{}
+		for _, iURL := range urls {
+			url, _ := iURL.(map[string]interface{})
+			urlsAry = append(urlsAry, url["url"])
 		}
-		rich["total_mentions"] = 0
-		iMentions, ok := message["mentions"]
-		if ok {
-			mentions, _ := iMentions.([]interface{})
-			mentionsAry := j.GetMentions(mentions)
-			rich["mentions"] = mentionsAry
-			rich["total_mentions"] = len(mentionsAry)
-		}
-		iChannelInfo, ok := message["channel_info"]
-		if ok {
-			channelInfo, _ := iChannelInfo.(map[string]interface{})
-			j.SetChannelInfo(rich, channelInfo)
-		}
-		rich["total_urls"] = 0
-		iURLs, ok := message["urls"]
-		if ok {
-			urls, _ := iURLs.([]interface{})
-			urlsAry := []interface{}{}
-			for _, iURL := range urls {
-				url, _ := iURL.(map[string]interface{})
-				urlsAry = append(urlsAry, url["url"])
-			}
-			rich["message_urls"] = urlsAry
-			rich["total_urls"] = len(urlsAry)
-		}
-		updatedOn, _ := Dig(item, []string{j.DateField(ctx)}, true, false)
-		if affs {
-			authorKey := "u"
-			var affsItems map[string]interface{}
-			affsItems, err = j.AffsItems(ctx, item, RocketchatRoles, updatedOn)
-			if err != nil {
-				return
-			}
-			for prop, value := range affsItems {
-				rich[prop] = value
-			}
-			for _, suff := range AffsFields {
-				rich[Author+suff] = rich[authorKey+suff]
-			}
-			orgsKey := authorKey + MultiOrgNames
-			_, ok := Dig(rich, []string{orgsKey}, false, true)
-			if !ok {
-				rich[orgsKey] = []interface{}{}
-			}
-		}
-		for prop, value := range CommonFields(j, updatedOn, Message) {
-			rich[prop] = value
-		}
-	*/
+		rich["message_urls"] = urlsAry
+		rich["total_urls"] = len(urlsAry)
+	}
+	iTS, _ := shared.Dig(message, []string{"ts"}, true, false)
+	ts, err := shared.TimeParseAny(iTS.(string))
+	shared.FatalOnError(err)
+	rich["ts"] = ts
+	// NOTE: From shared
+	rich["metadata__enriched_on"] = time.Now()
+	// rich[ProjectSlug] = ctx.ProjectSlug
+	// rich["groups"] = ctx.Groups
 	return
 }
 
@@ -483,7 +526,11 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		},
 	}
 	//source := data.DataSource.Slug
-	// FIXME
+	for _, iDoc := range docs {
+		doc, _ := iDoc.(map[string]interface{})
+		jsonBytes, _ := jsoniter.Marshal(doc)
+		shared.Printf("%s\n", string(jsonBytes))
+	}
 	return
 }
 
