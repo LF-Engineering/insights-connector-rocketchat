@@ -413,11 +413,11 @@ func (j *DSRocketchat) GetReactions(reactions map[string]interface{}) (richReact
 		data := emoji.GetEmojiUnicode(reactionType)
 		nUserNames := len(userNames)
 		richReactions = append(richReactions, map[string]interface{}{
-			"type":     reactionType,
-			"emoji":    data,
-			"username": userNames,
-			"names":    names,
-			"count":    nUserNames,
+			"type":      reactionType,
+			"emoji":     data,
+			"usernames": userNames,
+			"names":     names,
+			"count":     nUserNames,
 		})
 		nReactions += nUserNames
 	}
@@ -634,17 +634,19 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		chanUsers, _ := doc["channel_num_users"].(float64)
 		createdOn, _ := doc["created_at"].(time.Time)
 		updatedOn, _ := doc["updated_at"].(time.Time)
-		gMaxUpstreamDtMtx.Lock()
-		if updatedOn.After(gMaxUpstreamDt) {
-			gMaxUpstreamDt = updatedOn
+		actDt := updatedOn
+		if isEdited {
+			editedOn, okEdited := doc["edited_at"].(time.Time)
+			if okEdited {
+				actDt = editedOn
+			}
 		}
-		gMaxUpstreamDtMtx.Unlock()
-		actUUID := shared.UUIDNonEmpty(ctx, docUUID, shared.ToESDate(updatedOn))
+		actUUID := shared.UUIDNonEmpty(ctx, docUUID, shared.ToESDate(actDt))
 		activities := []*models.MessageActivity{
 			{
 				ID:                actUUID,
 				ActivityType:      actType,
-				CreatedAt:         strfmt.DateTime(updatedOn),
+				CreatedAt:         strfmt.DateTime(actDt),
 				Body:              body,
 				MessageID:         docUUID,
 				MessageInternalID: internalID,
@@ -652,6 +654,64 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				ParentInternalID:  parentIID,
 				Identity:          identity,
 			},
+		}
+		// Reactions
+		reactionsAry, okReactions := doc["reactions"].([]map[string]interface{})
+		if okReactions {
+			reactionType := "rocketchat_message_reaction"
+			for _, reactionData := range reactionsAry {
+				// map[count:1 emoji:UNICODE names:[] type::handshake: usernames:[rjones]]
+				typ, _ := reactionData["type"].(string)
+				emoji, _ := reactionData["emoji"].(string)
+				names, _ := reactionData["names"].([]interface{})
+				usernames, _ := reactionData["usernames"].([]interface{})
+				l1 := len(names)
+				l2 := len(usernames)
+				l := l1
+				if l2 > l1 {
+					l = l2
+				}
+				for i := 0; i < l; i++ {
+					name, username := "", ""
+					if i < l1 {
+						name, _ = names[i].(string)
+					}
+					if i < l2 {
+						username, _ = usernames[i].(string)
+					}
+					desc := name
+					if desc != "" && username != "" {
+						desc += " "
+					}
+					desc += username + " reacted with " + emoji
+					name, username = shared.PostprocessNameUsername(name, username, "")
+					userUUID := shared.UUIDAffs(ctx, source, "", name, username)
+					identity = &models.Identity{
+						ID:           userUUID,
+						DataSourceID: source,
+						Name:         name,
+						Username:     username,
+					}
+					reactionUUID := shared.UUIDNonEmpty(ctx, docUUID, "reaction", userUUID, typ)
+					activity := &models.MessageActivity{
+						ID:                reactionUUID,
+						ActivityType:      reactionType,
+						Body:              &desc,
+						CreatedAt:         strfmt.DateTime(actDt),
+						MessageID:         docUUID,
+						MessageInternalID: internalID,
+						ParentID:          parentID,
+						ParentInternalID:  parentIID,
+						Identity:          identity,
+						Reaction: &models.MessageReaction{
+							Author: identity,
+							Emoji:  emoji,
+							Type:   typ,
+						},
+					}
+					activities = append(activities, activity)
+				}
+			}
 		}
 		// Event
 		event := &models.Event{
@@ -675,6 +735,11 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 			},
 		}
 		data.Events = append(data.Events, event)
+		gMaxUpstreamDtMtx.Lock()
+		if updatedOn.After(gMaxUpstreamDt) {
+			gMaxUpstreamDt = updatedOn
+		}
+		gMaxUpstreamDtMtx.Unlock()
 	}
 	return
 }

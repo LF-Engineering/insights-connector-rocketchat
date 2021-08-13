@@ -12,133 +12,18 @@
       "Message": {
         "Activities": [
           {
-            "ActivityType": "rocketchat_message_edited",
-            "Body": "I hit same error in executing sawtooth command on ubuntu 18.04.04 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:24:13.113Z",
-            "Id": "df8097e70596712ab60e0629ac92bc82f753d645",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
-              "Name": "gbpp-MISSING-NAME",
-              "Username": "gbpp"
-            },
-            "MessageId": "988b06ad27db82a35516bbd77b19c53cdead7621",
-            "MessageInternalId": "g3Lvxs8RKPx2diKPY",
-            "ParentId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
-            "ParentInternalId": "Bus5Pw3XLSpN4tpxS"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-01T16:23:10.928Z",
-        "Id": "988b06ad27db82a35516bbd77b19c53cdead7621",
-        "InternalId": "g3Lvxs8RKPx2diKPY",
-        "Type": "rocketchat_message",
-        "URLs": [
-          "https://jira.hyperledger.org/browse/STL-1684"
-        ]
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_message_edited",
-            "Body": "I hit same error in executing sawtooth command on ubuntu 18.04.05 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:26:30.575Z",
-            "Id": "dd20375bb34e50b2b74f16d5049d433f05bec96e",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
-              "Name": "gbpp-MISSING-NAME",
-              "Username": "gbpp"
-            },
-            "MessageId": "bdf155f88ee42d99fa95eea4c4a0c543a99217d6",
-            "MessageInternalId": "rbDZqABYqJBNFwmti",
-            "ParentId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
-            "ParentInternalId": "Bus5Pw3XLSpN4tpxS"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-01T16:23:10.928Z",
-        "Id": "bdf155f88ee42d99fa95eea4c4a0c543a99217d6",
-        "InternalId": "rbDZqABYqJBNFwmti",
-        "Type": "rocketchat_message",
-        "URLs": [
-          "https://jira.hyperledger.org/browse/STL-1684"
-        ]
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_message_edited",
-            "Body": "I hit same error in executing sawtooth command on current latest sawtooth 1.2.6 (pbft engine) on ubuntu 18.04.05 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:26:30.579Z",
-            "Id": "4865e5878057f75094901b3a588796b9c59b0c5c",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
-              "Name": "gbpp-MISSING-NAME",
-              "Username": "gbpp"
-            },
-            "MessageId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
-            "MessageInternalId": "Bus5Pw3XLSpN4tpxS"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-01T16:23:10.928Z",
-        "Id": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
-        "InternalId": "Bus5Pw3XLSpN4tpxS",
-        "Type": "rocketchat_message",
-        "URLs": [
-          "https://jira.hyperledger.org/browse/STL-1684"
-        ]
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
             "ActivityType": "rocketchat_message_created",
-            "Body": "Bach 26",
-            "CreatedAt": "2021-01-09T06:14:19.215Z",
-            "Id": "298b053dd00df29e32ea410166186abf7c684d62",
+            "Body": "`eloafran` and `bjohnson` as well.",
+            "CreatedAt": "2021-02-17T19:19:24.492Z",
+            "Id": "b6b2eb4f21b4c064767ca6c76c77b0704bda1f94",
             "Identity": {
               "DataSourceId": "rocketchat",
-              "Id": "1f3ee8e14191b20ac73568df38157f132fda5ab9",
-              "Name": "Bach 26-MISSING-NAME",
-              "Username": "Bach 26"
+              "Id": "4a470d703ac4415baceea58a1ca728d311a32cbb",
+              "Name": "Ry Jones",
+              "Username": "rjones"
             },
-            "MessageId": "12047c75744e879ff43d4b1f2c680e1901798f5e",
-            "MessageInternalId": "2pLu7pEdfGzhksQ4e"
+            "MessageId": "ff580def2a7d6846b431e573bd3cead666bc1f02",
+            "MessageInternalId": "zSviracxNfkMnLPip"
           }
         ],
         "Channel": {
@@ -151,9 +36,9 @@
           "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
           "UpdatedAt": "2021-08-13T02:26:03.436Z"
         },
-        "CreatedAt": "2021-01-09T06:14:19.200Z",
-        "Id": "12047c75744e879ff43d4b1f2c680e1901798f5e",
-        "InternalId": "2pLu7pEdfGzhksQ4e",
+        "CreatedAt": "2021-02-17T19:19:24.450Z",
+        "Id": "ff580def2a7d6846b431e573bd3cead666bc1f02",
+        "InternalId": "zSviracxNfkMnLPip",
         "Type": "rocketchat_message",
         "URLs": null
       }
@@ -163,57 +48,328 @@
         "Activities": [
           {
             "ActivityType": "rocketchat_message_created",
-            "Body": "I can give a mini-roadmap of what my team is working on re:Sawtooth -- we are working on Sawtooth 2 (sawtooth-core's master branch), which will run on top of Splinter (https://www.splinter.dev/). A lot effort is currently happening to make Splinter production-ready. Splinter has a published roadmap -- https://www.splinter.dev/community/planning/roadmap.html. Since my team is involved in multiple initiatives (Sawtooth, Splinter, Grid, Transact), we tend to focus on one area for any given Sprint. The last effort for Sawtooth was replacing  Sawtooth's transaction handling with Transact. The next push will be replacing consensus with a consensus library. The push after that will be making Sawtooth into a Splinter service. And after that, it will be about defining what is left for a Sawtooth 2 release. We are also at the same time working on replacing the CLI with a pure Rust CLI and turning Sawtooth into a library (sawtooth-lib). As far as publishing a roadmap, etc. - we are also a branch to update the website, and after that is complete we will likely add a roadmap page.",
-            "CreatedAt": "2021-01-11T18:10:51.833Z",
-            "Id": "f7cf3d40ef465158e5ce66f2d1f94daa8f52d8f3",
+            "Body": "```$ grep -Rl cian hyperledger/*\nhyperledger/sawtooth-core/MAINTAINERS.md\nhyperledger/sawtooth-devmode/MAINTAINERS.md\nhyperledger/sawtooth-lib/MAINTAINERS.md\nhyperledger/sawtooth-poet/MAINTAINERS.md\nhyperledger/sawtooth-sdk-cxx/MAINTAINERS.md\nhyperledger/sawtooth-sdk-dotnet/MAINTAINERS.md\nhyperledger/sawtooth-sdk-go/MAINTAINERS.md\nhyperledger/sawtooth-sdk-java/MAINTAINERS.md\nhyperledger/sawtooth-sdk-javascript/MAINTAINERS.md\nhyperledger/sawtooth-sdk-python/MAINTAINERS.md\nhyperledger/sawtooth-sdk-rust/MAINTAINERS.md\n```",
+            "CreatedAt": "2021-02-17T19:20:04.582Z",
+            "Id": "08061d4fef1a554aef89a988e578331c37069e27",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "4a470d703ac4415baceea58a1ca728d311a32cbb",
+              "Name": "Ry Jones",
+              "Username": "rjones"
+            },
+            "MessageId": "5251a33aed6dfc85ae5b6c2c7525e1e27a14c9f8",
+            "MessageInternalId": "LyBNE49AnwaLqaLHJ"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-17T19:20:04.528Z",
+        "Id": "5251a33aed6dfc85ae5b6c2c7525e1e27a14c9f8",
+        "InternalId": "LyBNE49AnwaLqaLHJ",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "If I supply arguments to the command that starts my validator (bind etc) will my validator.toml file be ignored?",
+            "CreatedAt": "2021-02-18T11:02:21.184Z",
+            "Id": "c98a9c76c089bdb814e751be0aac033180ac9e57",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "34d9196c4e2bcb921cff2322016c078e34179ada",
+              "Name": "anteatersa-MISSING-NAME",
+              "Username": "anteatersa"
+            },
+            "MessageId": "ec10e116320082f196e5b87676b8b9228f615b0b",
+            "MessageInternalId": "2oQjqzuFSbbAaje3f"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T11:02:21.156Z",
+        "Id": "ec10e116320082f196e5b87676b8b9228f615b0b",
+        "InternalId": "2oQjqzuFSbbAaje3f",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "[ ](https://chat.hyperledger.org/channel/sawtooth?msg=4f5CNu7bcR5bavspp) Any update on this?",
+            "CreatedAt": "2021-02-18T06:37:56.956Z",
+            "Id": "a46129f32366556a271dc3fb6ba92a11e261b86b",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "097bee95461444de8c24465c34ad3e4561b49a77",
+              "Name": "Charalampos",
+              "Username": "charalarg"
+            },
+            "MessageId": "d302a9c7a8c26b11343cb490afed7c2f29b79a3c",
+            "MessageInternalId": "nyBHn6u225nSgDrBu"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T06:37:56.926Z",
+        "Id": "d302a9c7a8c26b11343cb490afed7c2f29b79a3c",
+        "InternalId": "nyBHn6u225nSgDrBu",
+        "Type": "rocketchat_message",
+        "URLs": [
+          "https://chat.hyperledger.org/channel/sawtooth?msg=4f5CNu7bcR5bavspp"
+        ]
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "The reason I ask is that the \"peers\" defined in my validator.toml seem to be getting ignored as I am getting these types of messages\n\nCan't send message PING_RESPONSE back to ff9a01fec7338b4167571435d2c91c2b5a13e248a1033340e27e2bf0cfb3739390fa3b3a28c4716653c9c20187f7ff8b13b5cf1c937b18b52440d5587c32e9f8 because connection OutboundConnectionThread-tcp://*.*.*.*:8080 not in dispatcher",
+            "CreatedAt": "2021-02-18T11:06:21.701Z",
+            "Id": "64eb268689273fe219e8c0af803d6c7815beb684",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "34d9196c4e2bcb921cff2322016c078e34179ada",
+              "Name": "anteatersa-MISSING-NAME",
+              "Username": "anteatersa"
+            },
+            "MessageId": "722ba0f43ae0a731b7cb02228fd7caa4b01a70a2",
+            "MessageInternalId": "eCH9qRnkxrsj5uaCo"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T11:06:21.672Z",
+        "Id": "722ba0f43ae0a731b7cb02228fd7caa4b01a70a2",
+        "InternalId": "eCH9qRnkxrsj5uaCo",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "MarcoGuado",
+            "CreatedAt": "2021-02-18T14:45:56.242Z",
+            "Id": "1baf8e9863416531f0131837f5b057ea936dcad5",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "27cc315da790197b21f9f006bef41e14c9b047f3",
+              "Name": "MarcoGuado-MISSING-NAME",
+              "Username": "MarcoGuado"
+            },
+            "MessageId": "816e30e3c036755570e325b4c566865c7262b740",
+            "MessageInternalId": "NRbz5ZFBdJ9RRt3RD"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T14:45:56.230Z",
+        "Id": "816e30e3c036755570e325b4c566865c7262b740",
+        "InternalId": "NRbz5ZFBdJ9RRt3RD",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "Hello, I am testing the different versions (1.1,1.2,1.3) of docker-defaulf-pbft in a VPS Ubuntu 18.04 but it gives the error, because no file works, in the documentation only indicate to run in Ubuntu but there are no more requirements, how can we learn to use this tool if the example files have error. Greetings",
+            "CreatedAt": "2021-02-18T14:45:56.737Z",
+            "Id": "b0c99bd29b7989c0518650cff4cee2de14c2ebee",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "27cc315da790197b21f9f006bef41e14c9b047f3",
+              "Name": "MarcoGuado-MISSING-NAME",
+              "Username": "MarcoGuado"
+            },
+            "MessageId": "6fbf3570def54fa9126e7f1e490881e2457b071f",
+            "MessageInternalId": "23WvHwKaMd7v4sqHp"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T14:45:56.711Z",
+        "Id": "6fbf3570def54fa9126e7f1e490881e2457b071f",
+        "InternalId": "23WvHwKaMd7v4sqHp",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "@MarcoGuado  If you're running the tests in Docker it shouldn't matter what Linux Distro you are using",
+            "CreatedAt": "2021-02-18T15:33:33.008Z",
+            "Id": "709ccccee7c71df5dd36169f88b946cc2ef8c137",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "34d9196c4e2bcb921cff2322016c078e34179ada",
+              "Name": "anteatersa-MISSING-NAME",
+              "Username": "anteatersa"
+            },
+            "MessageId": "1e23a45312eebe499329bb46056d74121117bc38",
+            "MessageInternalId": "C7HCgkWGQeywNvjwN"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T15:33:32.988Z",
+        "Id": "1e23a45312eebe499329bb46056d74121117bc38",
+        "InternalId": "C7HCgkWGQeywNvjwN",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "I get a lot of these messages in my logs, are they anything to worry about?\n\nsawtooth-validator          | [2021-02-18 15:30:07.022 WARNING  dispatch] Attempted to remove send_message function for connection OutboundConnectionThread-tcp://ip:8080, but no send_message function \nwas registered\nsawtooth-validator          | [2021-02-18 15:30:07.023 WARNING  dispatch] Attempted to remove send_last_message function for connection OutboundConnectionThread-tcp://ip:8080, but no send_last_message\n function was registered\nsawtooth-validator          | [2021-02-18 15:32:47.203 WARNING  dispatch] Attempted to remove send_message function for connection OutboundConnectionThread-tcp://ip:8080, but no send_message function was registered\nsawtooth-validator          | [2021-02-18 15:32:47.204 WARNING  dispatch] Attempted to remove send_last_message function for connection OutboundConnectionThread-tcp://ip:8080, but no send_last_message function was registered",
+            "CreatedAt": "2021-02-18T15:37:57.326Z",
+            "Id": "292cf299fcd56158fddb27705d098aa24c7ae83a",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "34d9196c4e2bcb921cff2322016c078e34179ada",
+              "Name": "anteatersa-MISSING-NAME",
+              "Username": "anteatersa"
+            },
+            "MessageId": "98083d9424ffa26edae0228a98b12ad090bfafb7",
+            "MessageInternalId": "BT689KqQhMcwjmiGh"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-02-18T15:37:57.304Z",
+        "Id": "98083d9424ffa26edae0228a98b12ad090bfafb7",
+        "InternalId": "BT689KqQhMcwjmiGh",
+        "Type": "rocketchat_message",
+        "URLs": [
+          "tcp://ip:8080,",
+          "tcp://ip:8080,",
+          "tcp://ip:8080,",
+          "tcp://ip:8080,"
+        ]
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "@rjones I took a note here to get back to you on that",
+            "CreatedAt": "2021-02-18T15:54:37.707Z",
+            "Id": "1bb0be5153e31a15d47c19f0a7898b08a5b65a61",
             "Identity": {
               "DataSourceId": "rocketchat",
               "Id": "6fddcac3f5d66a9193499d2da3efd74f7a13fcea",
               "Name": "Shawn Amundson",
               "Username": "amundson"
             },
-            "MessageId": "fc84e2d3517bbaa562efc25e860860ead2fb6929",
-            "MessageInternalId": "zfGdRj6McZJ2kEWAk"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-11T18:10:51.806Z",
-        "Id": "fc84e2d3517bbaa562efc25e860860ead2fb6929",
-        "InternalId": "zfGdRj6McZJ2kEWAk",
-        "Type": "rocketchat_message",
-        "URLs": [
-          "https://www.splinter.dev/).",
-          "https://www.splinter.dev/community/planning/roadmap.html."
-        ]
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
+            "MessageId": "0c6681fbd93b992a387bd3dbc4792c933f8ad049",
+            "MessageInternalId": "tuQ6BbNQQXNW7ejuL"
+          },
           {
-            "ActivityType": "rocketchat_message_edited",
-            "Body": "Hi, is there any mechanism to fetch the timestamps for transactions or blocks without the use of blockInfo transaction processor. I see that the timestamps are not returned in any of the API exposed by rest-api service.",
-            "CreatedAt": "2021-01-12T10:32:00.027Z",
-            "Id": "e2370051047eb76315f74aadeff4d543e78bce45",
+            "ActivityType": "rocketchat_message_reaction",
+            "Body": "rjones reacted with 🤝",
+            "CreatedAt": "2021-02-18T15:54:37.707Z",
+            "Id": "6b7e5b1f78188624d92f812f5fc0e07cf5a82bba",
             "Identity": {
               "DataSourceId": "rocketchat",
-              "Id": "6dc20c37573dbafdf1517b70cd750797a9aaf394",
-              "Name": "CodeReaper-MISSING-NAME",
-              "Username": "CodeReaper"
+              "Id": "17d0f58c9da8a3607bb371e9c094981cafa9d50d",
+              "Name": "rjones-MISSING-NAME",
+              "Username": "rjones"
             },
-            "MessageId": "d01fa04d4cbf5697bfc93c219de20471df7999d4",
-            "MessageInternalId": "8w2cLgYvz8L3YXPN8",
-            "ParentId": "4a4a4a0e11a8b7ca6ea1aac94f8e4e41583e2590",
-            "ParentInternalId": "G5E8C4HsS2aSnmWd2"
+            "MessageId": "0c6681fbd93b992a387bd3dbc4792c933f8ad049",
+            "MessageInternalId": "tuQ6BbNQQXNW7ejuL",
+            "Reaction": {
+              "Author": {
+                "DataSourceId": "rocketchat",
+                "Id": "17d0f58c9da8a3607bb371e9c094981cafa9d50d",
+                "Name": "rjones-MISSING-NAME",
+                "Username": "rjones"
+              },
+              "Emoji": "🤝",
+              "Type": ":handshake:"
+            }
           }
         ],
         "Channel": {
@@ -226,150 +382,10 @@
           "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
           "UpdatedAt": "2021-08-13T02:26:03.436Z"
         },
-        "CreatedAt": "2021-01-12T10:30:03.507Z",
-        "Id": "d01fa04d4cbf5697bfc93c219de20471df7999d4",
-        "InternalId": "8w2cLgYvz8L3YXPN8",
+        "CreatedAt": "2021-02-18T15:54:16.441Z",
+        "Id": "0c6681fbd93b992a387bd3dbc4792c933f8ad049",
+        "InternalId": "tuQ6BbNQQXNW7ejuL",
         "Type": "rocketchat_message",
-        "URLs": null
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_message_created",
-            "Body": "Hey guys, don't get this wrong in any way... we've been asked to look through different projects to recommend one for an Enterprise solution... we're really leaning towards Sawtooth instead of Fabric, but the activity is a bit concerning. Is the project under active development still? is there a roadmap we can use to back this project and convince the team that the project is alive and well?",
-            "CreatedAt": "2021-01-09T06:14:19.796Z",
-            "Id": "865eb3be3ac27ae5e5a62387f9bbf2c46dafde28",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "1f3ee8e14191b20ac73568df38157f132fda5ab9",
-              "Name": "Bach 26-MISSING-NAME",
-              "Username": "Bach 26"
-            },
-            "MessageId": "c2ae7cbd105f6cec8ef2bb7b73f1d07e5d7a85c7",
-            "MessageInternalId": "7ydDWiFkFBJPy97qr"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-09T06:14:19.770Z",
-        "Id": "c2ae7cbd105f6cec8ef2bb7b73f1d07e5d7a85c7",
-        "InternalId": "7ydDWiFkFBJPy97qr",
-        "Type": "rocketchat_message",
-        "URLs": null
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_message_edited",
-            "Body": "Hi, is there any mechanism to fetch the timestamps for transactions or blocks without the use of blockInfo transaction processor? I see that the timestamps are not returned in any of the API exposed by rest-api service.",
-            "CreatedAt": "2021-01-12T10:32:00.032Z",
-            "Id": "662fc8b056726375c75b0ef2c6a1ccd5de3f9153",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "6dc20c37573dbafdf1517b70cd750797a9aaf394",
-              "Name": "CodeReaper-MISSING-NAME",
-              "Username": "CodeReaper"
-            },
-            "MessageId": "4a4a4a0e11a8b7ca6ea1aac94f8e4e41583e2590",
-            "MessageInternalId": "G5E8C4HsS2aSnmWd2"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-12T10:30:03.507Z",
-        "Id": "4a4a4a0e11a8b7ca6ea1aac94f8e4e41583e2590",
-        "InternalId": "G5E8C4HsS2aSnmWd2",
-        "Type": "rocketchat_message",
-        "URLs": []
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_message_created",
-            "Body": "Hello Everyone,\nDoes anyone know the troubleshooting step when sawtooth pod [ 3 containers each running pbft-engine, transaction-processor and sawtooth-validator respectively] start getting evicted from k8s cluster with reason [*The node was low on resource: ephemeral-storage*]. Due to this, pod becomes unresponsive and starts giving  UNKNOWN status for a certain time frame.",
-            "CreatedAt": "2021-01-12T11:09:44.783Z",
-            "Id": "f06748dbf6f6e04e7bb4dbf4adeccf2d584a16f8",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "b6bdda9778fc26487c5b5452332288fa1f648feb",
-              "Name": "AbhijeetBH 2-MISSING-NAME",
-              "Username": "AbhijeetBH 2"
-            },
-            "MessageId": "030f443801a7d28b6711961301e1b7316435504a",
-            "MessageInternalId": "25TNjtuSrnmuY8mj4"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-12T11:09:44.760Z",
-        "Id": "030f443801a7d28b6711961301e1b7316435504a",
-        "InternalId": "25TNjtuSrnmuY8mj4",
-        "Type": "rocketchat_message",
-        "URLs": null
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "ActivityType": "rocketchat_attachment_added",
-            "Body": "Screenshot from 2021-01-11 14-13-37.png",
-            "CreatedAt": "2021-01-12T11:10:10.680Z",
-            "Id": "4e3cb6ec78d4780aaff272943a1626c0fa55f196",
-            "Identity": {
-              "DataSourceId": "rocketchat",
-              "Id": "b6bdda9778fc26487c5b5452332288fa1f648feb",
-              "Name": "AbhijeetBH 2-MISSING-NAME",
-              "Username": "AbhijeetBH 2"
-            },
-            "MessageId": "63762eccf588c7c176f2c0d41c6824a934fc68ff",
-            "MessageInternalId": "zdkhZ958fsEywDKh3"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-12T11:09:57.749Z",
-        "Id": "63762eccf588c7c176f2c0d41c6824a934fc68ff",
-        "InternalId": "zdkhZ958fsEywDKh3",
-        "Type": "rocketchat_attachment",
         "URLs": null
       }
     }
@@ -379,11 +395,11 @@
     "BackendVersion": "0.1.0",
     "Project": "Kubernetes",
     "Tags": [
-      "a",
-      "b",
       "c",
       "d",
-      "e"
+      "e",
+      "a",
+      "b"
     ]
   }
 }
