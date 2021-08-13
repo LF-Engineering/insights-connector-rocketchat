@@ -62,9 +62,9 @@ func (j *DSRocketchat) AddFlags() {
 	j.FlagChannel = flag.String("rocketchat-channel", "", "RocketChat channel, for example sawtooth")
 	j.FlagUser = flag.String("rocketchat-user", "", "User: API user ID")
 	j.FlagToken = flag.String("rocketchat-token", "", "Token: API token")
-	j.FlagMaxItems = flag.Int("rocketchat-", RocketchatDefaultMaxItems, "max items to retrieve from API via a single request - defaults to 100")
-	j.FlagMinRate = flag.Int("rocketchat-", RocketchatDefaultMinRate, "min API points, if we reach this value we wait for refresh, default 10")
-	j.FlagWaitRate = flag.Bool("rocketchat-", false, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached")
+	j.FlagMaxItems = flag.Int("rocketchat-max-items", RocketchatDefaultMaxItems, "max items to retrieve from API via a single request - defaults to 100")
+	j.FlagMinRate = flag.Int("rocketchat-min-rate", RocketchatDefaultMinRate, "min API points, if we reach this value we wait for refresh, default 10")
+	j.FlagWaitRate = flag.Bool("rocketchat-wait-rate", false, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached")
 }
 
 // ParseArgs - parse rocketchat specific environment variables
@@ -597,7 +597,7 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 // GetRocketchatMessages - get confluence historical contents
 func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate string, offset, rateLimit, rateLimitReset, thrN int) (messages []map[string]interface{}, newOffset, total, outRateLimit, outRateLimitReset int, err error) {
 	// query := `{"_updatedAt": {"$gte": {"$date": "` + fromDate + `"}}}`
-	query := `{"_updatedAt":{"$and":[{"$gte":{"$date":"` + fromDate + `"}},{"$lt":{"$date": "` + toDate + `"}}]}}`
+	query := `{"$and":[{"_updatedAt": {"$gte": {"$date": "` + fromDate + `"}}},{"_updatedAt": {"$lt": {"$date": "` + toDate + `"}}}]}`
 	url := j.URL + fmt.Sprintf(
 		`/api/v1/channels.messages?roomName=%s&count=%d&offset=%d&sort=%s&query=%s`,
 		neturl.QueryEscape(j.Channel),
@@ -674,11 +674,14 @@ func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate s
 // Sync - sync rocketchat data source
 func (j *DSRocketchat) Sync(ctx *shared.Ctx) (err error) {
 	thrN := shared.GetThreadsNum(ctx)
+	if ctx.DateFrom != nil {
+		shared.Printf("%s fetching from %v (%d threads)\n", j.Endpoint(), ctx.DateFrom, thrN)
+	}
 	if ctx.DateFrom == nil {
 		ctx.DateFrom = shared.GetLastUpdate(ctx, j.URL)
-	}
-	if ctx.DateFrom != nil {
-		shared.Printf("%s resuming from %v (%d threads)\n", j.Endpoint(), ctx.DateFrom, thrN)
+		if ctx.DateFrom != nil {
+			shared.Printf("%s resuming from %v (%d threads)\n", j.Endpoint(), ctx.DateFrom, thrN)
+		}
 	}
 	if ctx.DateTo != nil {
 		shared.Printf("%s fetching till %v (%d threads)\n", j.Endpoint(), ctx.DateTo, thrN)
@@ -897,11 +900,21 @@ func (j *DSRocketchat) Sync(ctx *shared.Ctx) (err error) {
 			}
 		}
 	}
+	// NOTE: lock needed
+	if eschaMtx != nil {
+		eschaMtx.Lock()
+	}
 	for _, esch := range escha {
 		err = <-esch
 		if err != nil {
+			if eschaMtx != nil {
+				eschaMtx.Unlock()
+			}
 			return
 		}
+	}
+	if eschaMtx != nil {
+		eschaMtx.Unlock()
 	}
 	nMsgs := len(allMsgs)
 	if ctx.Debug > 0 {
