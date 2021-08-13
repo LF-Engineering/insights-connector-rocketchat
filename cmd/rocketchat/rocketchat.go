@@ -14,6 +14,7 @@ import (
 	"github.com/LF-Engineering/dev-analytics-libraries/emoji"
 	"github.com/LF-Engineering/insights-datasource-rocketchat/gen/models"
 	shared "github.com/LF-Engineering/insights-datasource-shared"
+	"github.com/go-openapi/strfmt"
 	jsoniter "github.com/json-iterator/go"
 	// jsoniter "github.com/json-iterator/go"
 )
@@ -445,9 +446,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		err = fmt.Errorf("missing data field in item %+v", shared.DumpKeys(item))
 		return
 	}
-	msg, _ := message["msg"]
-	rich["msg_analyzed"] = msg
-	rich["msg"] = msg
+	rich["msg"], _ = message["msg"]
 	rich["rid"], _ = message["rid"]
 	rich["msg_id"], _ = message["_id"]
 	rich["msg_parent"], _ = message["parent"]
@@ -527,10 +526,11 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 	iURLs, ok := message["urls"]
 	if ok {
 		urls, _ := iURLs.([]interface{})
-		urlsAry := []interface{}{}
+		urlsAry := []string{}
 		for _, iURL := range urls {
-			url, _ := iURL.(map[string]interface{})
-			urlsAry = append(urlsAry, url["url"])
+			urliObj, _ := iURL.(map[string]interface{})
+			url, _ := urliObj["url"].(string)
+			urlsAry = append(urlsAry, url)
 		}
 		rich["message_urls"] = urlsAry
 		rich["total_urls"] = len(urlsAry)
@@ -538,7 +538,11 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 	iTS, _ := shared.Dig(message, []string{"ts"}, true, false)
 	ts, err := shared.TimeParseAny(iTS.(string))
 	shared.FatalOnError(err)
-	rich["ts"] = ts
+	rich["created_at"] = ts
+	iUpdatedAt, _ := shared.Dig(message, []string{"_updatedAt"}, true, false)
+	updatedAt, err := shared.TimeParseAny(iUpdatedAt.(string))
+	shared.FatalOnError(err)
+	rich["updated_at"] = updatedAt
 	// NOTE: From shared
 	rich["metadata__enriched_on"] = time.Now()
 	// rich[ProjectSlug] = ctx.ProjectSlug
@@ -559,9 +563,68 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 	}
 	//source := data.DataSource.Slug
 	for _, iDoc := range docs {
+		var (
+			urls []string
+			body *string
+		)
 		doc, _ := iDoc.(map[string]interface{})
-		jsonBytes, _ := jsoniter.Marshal(doc)
-		shared.Printf("%s\n", string(jsonBytes))
+		//jsonBytes, _ := jsoniter.Marshal(doc)
+		//shared.Printf("%s\n", string(jsonBytes))
+		msgType := "rocketchat_message"
+		docUUID, _ := doc["uuid"].(string)
+		internalID, _ := doc["msg_id"].(string)
+		sBody, _ := doc["msg"].(string)
+		urls, _ = doc["message_urls"].([]string)
+		fileName, fileOK := doc["file_name"].(string)
+		if fileOK {
+			msgType = "rocketchat_attachment"
+			sBody = fileName
+		}
+		if sBody != "" {
+			body = &sBody
+		}
+		createdOn, _ := doc["created_at"].(time.Time)
+		updatedOn, _ := doc["updated_at"].(time.Time)
+		gMaxUpstreamDtMtx.Lock()
+		if updatedOn.After(gMaxUpstreamDt) {
+			gMaxUpstreamDt = updatedOn
+		}
+		gMaxUpstreamDtMtx.Unlock()
+		activities := []*models.MessageActivity{
+			{
+				CreatedAt: strfmt.DateTime(updatedOn),
+				Body:      body,
+				//ActivityType string `json:"ActivityType,omitempty"`
+				//ID string `json:"Id,omitempty"`
+				//Identity *Identity `json:"Identity,omitempty"`
+				//MessageID string `json:"MessageId,omitempty"`
+				//MessageInternalID string `json:"MessageInternalId,omitempty"`
+				//ParentID *string `json:"ParentId,omitempty"`
+				//ParentInternalID *string `json:"ParentInternalId,omitempty"`
+			},
+		}
+		// Event
+		event := &models.Event{
+			Message: &models.Message{
+				ID:         docUUID,
+				InternalID: internalID,
+				Type:       msgType,
+				URLs:       urls,
+				CreatedAt:  strfmt.DateTime(createdOn),
+				Activities: activities,
+				Channel:    &models.Channel{
+					//CreatedAt strfmt.DateTime `json:"CreatedAt,omitempty"`
+					//InternalID string `json:"InternalId,omitempty"`
+					//MemberCount int64 `json:"MemberCount,omitempty"`
+					//MessageCount int64 `json:"MessageCount,omitempty"`
+					//Name string `json:"Name,omitempty"`
+					//Slug string `json:"Slug,omitempty"`
+					//Topic string `json:"Topic,omitempty"`
+					//UpdatedAt strfmt.DateTime `json:"UpdatedAt,omitempty"`
+				},
+			},
+		}
+		data.Events = append(data.Events, event)
 	}
 	return
 }
@@ -636,6 +699,10 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 			mtx.Lock()
 		}
 		*docs = append(*docs, rich)
+		// NOTE: flush here
+		if len(*docs) >= ctx.PackSize {
+			outputDocs()
+		}
 		if thrN > 1 {
 			mtx.Unlock()
 		}

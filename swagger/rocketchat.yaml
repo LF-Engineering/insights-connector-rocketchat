@@ -141,11 +141,11 @@ definitions:
         example: '2019-09-02 03:00:33.000000'
       ActivityType:
         type: string
-        example: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_imessage_reply
+        example: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_attachment_added
         description: allows reconstructing relations
       Body:
         type: string
-        description: message, reply, mention body
+        description: message, reply, body, file name
         example: My comment body
         x-nullable: true
       Identity:
@@ -175,6 +175,10 @@ definitions:
         items:
           type: string
           example: https://msg-url
+      Type:
+        type: string
+        example: ok
+        description: can be message, attachment
       Channel:
         type: object
         $ref: "#/definitions/Channel"
