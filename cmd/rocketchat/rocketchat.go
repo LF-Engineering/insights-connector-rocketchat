@@ -596,6 +596,7 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 
 // GetRocketchatMessages - get confluence historical contents
 func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate string, offset, rateLimit, rateLimitReset, thrN int) (messages []map[string]interface{}, newOffset, total, outRateLimit, outRateLimitReset int, err error) {
+	// Without dateTo
 	// query := `{"_updatedAt": {"$gte": {"$date": "` + fromDate + `"}}}`
 	query := `{"$and":[{"_updatedAt": {"$gte": {"$date": "` + fromDate + `"}}},{"_updatedAt": {"$lt": {"$date": "` + toDate + `"}}}]}`
 	url := j.URL + fmt.Sprintf(
@@ -606,6 +607,9 @@ func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate s
 		neturl.QueryEscape(`{"_updatedAt": 1}`),
 		neturl.QueryEscape(query),
 	)
+	if ctx.Debug > 1 {
+		shared.Printf("max items: %d, offset: %d, date range: %s - %s\n", j.MaxItems, offset, fromDate, toDate)
+	}
 	// Let's cache messages for 1 hour (so there are no rate limit hits during the development)
 	// FIXME
 	cacheDur := time.Duration(8) * time.Hour
