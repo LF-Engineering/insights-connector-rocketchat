@@ -37,6 +37,10 @@ var (
 	// RocketchatDataSource - constant
 	RocketchatDataSource = &models.DataSource{Name: "RocketChat", Slug: "rocketchat"}
 	gRocketchatMetaData  = &models.MetaData{BackendName: "rocketchat", BackendVersion: RocketchatBackendVersion}
+	// For debugging all documents
+	// gM  = &sync.Mutex{}
+	// gRa []map[string]interface{}
+	// gRi []map[string]interface{}
 )
 
 // DSRocketchat - DS implementation for rocketchat - does nothing at all, just presents a skeleton code
@@ -414,8 +418,16 @@ func (j *DSRocketchat) GetReactions(reactions map[string]interface{}) (richReact
 
 // EnrichItem - return rich item from raw item for a given author type
 func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) (rich map[string]interface{}, err error) {
-	//jsonBytes, _ := jsoniter.Marshal(item)
-	//shared.Printf("%s\n", string(jsonBytes))
+	/*
+		defer func() {
+			gM.Lock()
+			defer gM.Unlock()
+			gRa = append(gRa, item)
+			gRi = append(gRi, rich)
+		}()
+		jsonBytes, _ := jsoniter.Marshal(item)
+		shared.Printf("%s\n", string(jsonBytes))
+	*/
 	rich = make(map[string]interface{})
 	for _, field := range shared.RawFields {
 		v, _ := item[field]
@@ -999,4 +1011,10 @@ func main() {
 		shared.Printf("Error: %+v\n", err)
 		return
 	}
+	/*
+		jsonBytes, _ := jsoniter.Marshal(gRa)
+		fmt.Printf("gRa: {\"all\":%s}\n", string(jsonBytes))
+		jsonBytes, _ = jsoniter.Marshal(gRi)
+		fmt.Printf("gRi: {\"all\":%s}\n", string(jsonBytes))
+	*/
 }
