@@ -510,7 +510,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		rich["reactions"], rich["total_reactions"] = j.GetReactions(reactions)
 	}
 	rich["total_mentions"] = 0
-	// array of { _id username } objects
+	// array of { _id name username } objects
 	iMentions, ok := message["mentions"]
 	if ok {
 		mentions, _ := iMentions.([]interface{})
@@ -624,7 +624,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				Username:     username,
 			}
 		}
-		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_attachment_added
+		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added
 		chanIID, _ := doc["channel_id"].(string)
 		chanCreatedAt, _ := doc["channel_created_at"].(time.Time)
 		chanUpdatedAt, _ := doc["channel_updated_at"].(time.Time)
@@ -711,6 +711,36 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 					}
 					activities = append(activities, activity)
 				}
+			}
+		}
+		// Mentions
+		mentionsAry, okMentions := doc["mentions"].([]map[string]interface{})
+		if okMentions {
+			mentionType := "rocketchat_message_mention"
+			for _, mentionData := range mentionsAry {
+				// map[id:XYZ name:RJ username:rjones]
+				name, _ := mentionData["name"].(string)
+				username, _ := mentionData["username"].(string)
+				name, username = shared.PostprocessNameUsername(name, username, "")
+				userUUID := shared.UUIDAffs(ctx, source, "", name, username)
+				identity = &models.Identity{
+					ID:           userUUID,
+					DataSourceID: source,
+					Name:         name,
+					Username:     username,
+				}
+				mentionUUID := shared.UUIDNonEmpty(ctx, docUUID, "mention", userUUID)
+				activity := &models.MessageActivity{
+					ID:                mentionUUID,
+					ActivityType:      mentionType,
+					CreatedAt:         strfmt.DateTime(actDt),
+					MessageID:         docUUID,
+					MessageInternalID: internalID,
+					ParentID:          parentID,
+					ParentInternalID:  parentIID,
+					Identity:          identity,
+				}
+				activities = append(activities, activity)
 			}
 		}
 		// Event
@@ -871,9 +901,8 @@ func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate s
 	if ctx.Debug > 1 {
 		shared.Printf("max items: %d, offset: %d, date range: %s - %s\n", j.MaxItems, offset, fromDate, toDate)
 	}
-	// Let's cache messages for 1 hour (so there are no rate limit hits during the development)
-	// FIXME
-	cacheDur := time.Duration(8) * time.Hour
+	// Let's cache messages for 2 hours (so there are no rate limit hits during the development)
+	cacheDur := time.Duration(2) * time.Hour
 	// cacheDur := time.Duration(1) * time.Hour
 	method := "GET"
 	headers := map[string]string{"X-User-ID": j.User, "X-Auth-Token": j.Token}
