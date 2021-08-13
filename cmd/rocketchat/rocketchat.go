@@ -596,13 +596,20 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		isEdited, _ := doc["is_edited"].(bool)
 		if isEdited {
 			if fileOK {
-				jsonBytes, _ := jsoniter.Marshal(doc)
-				shared.Printf("WARNING: should not happen, message is an attachment and page edit at the same time:\n%s\n", jsonBytes)
+				// jsonBytes, _ := jsoniter.Marshal(doc)
+				// shared.Printf("should not happen, message is an attachment and page edit at the same time:\n%s\n", jsonBytes)
+				actType = "rocketchat_attachment_edited"
+			} else {
+				actType = "rocketchat_message_edited"
 			}
-			actType = "rocketchat_message_edited"
 			name, _ := doc["edited_by_name"].(string)
 			// We can consider using 'edited_by_user_id' if name is empty
 			username, _ := doc["edited_by_username"].(string)
+			// Fallback
+			if name == "" && username == "" {
+				name, _ = doc["user_name"].(string)
+				username, _ = doc["user_username"].(string)
+			}
 			name, username = shared.PostprocessNameUsername(name, username, "")
 			userUUID := shared.UUIDAffs(ctx, source, "", name, username)
 			identity = &models.Identity{
@@ -624,7 +631,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				Username:     username,
 			}
 		}
-		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added
+		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added, rocketchat_attachment_edited
 		chanIID, _ := doc["channel_id"].(string)
 		chanCreatedAt, _ := doc["channel_created_at"].(time.Time)
 		chanUpdatedAt, _ := doc["channel_updated_at"].(time.Time)
