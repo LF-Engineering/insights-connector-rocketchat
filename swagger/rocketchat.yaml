@@ -51,17 +51,10 @@ definitions:
       Username:
         type: string
         example: lgryglicki
-      Email:
-        type: string
-        example: lgryglicki@cncf.io
       DataSourceId:
         type: string
         example: rocketchat
         description: data source type slug (FK)
-      AvatarURL:
-        type: string
-        x-nullable: true    # allowed?
-        example: https://avatars.githubusercontent.com/u/13455738?v=4
   Channel:
     type: object
     properties:

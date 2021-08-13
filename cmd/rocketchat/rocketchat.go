@@ -377,7 +377,7 @@ func (j *DSRocketchat) SetChannelInfo(rich, channel map[string]interface{}) {
 	rich["channel_name"], _ = channel["name"]
 	rich["channel_num_users"], _ = channel["usersCount"]
 	rich["channel_topic"], _ = channel["topic"]
-	rich["avatar"], _ = shared.Dig(channel, []string{"lastMessage", "avatar"}, false, true)
+	// rich["avatar"], _ = shared.Dig(channel, []string{"lastMessage", "avatar"}, false, true)
 }
 
 // GetMentions - convert raw mentions to rich mentions
@@ -457,7 +457,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		rich["user_name"], _ = author["name"]
 		rich["user_username"], _ = author["username"]
 	}
-	rich["is_edited"] = 0
+	rich["is_edited"] = false
 	iEditor, ok := message["editedBy"]
 	if ok {
 		editor, _ := iEditor.(map[string]interface{})
@@ -468,9 +468,10 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 				rich["edited_at"] = edited
 			}
 		}
+		rich["edited_by_name"], _ = editor["name"]
 		rich["edited_by_username"], _ = editor["username"]
 		rich["edited_by_user_id"], _ = editor["_id"]
-		rich["is_edited"] = 1
+		rich["is_edited"] = true
 	}
 	// If file is present then a given message is not a message but file attachment
 	// attachments is also present is such cases
@@ -561,16 +562,18 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 			RocketChatChannel: j.Channel,
 		},
 	}
-	//source := data.DataSource.Slug
+	source := data.DataSource.Slug
 	for _, iDoc := range docs {
 		var (
-			urls []string
-			body *string
+			urls      []string
+			body      *string
+			parentIID *string
+			parentID  *string
+			identity  *models.Identity
 		)
 		doc, _ := iDoc.(map[string]interface{})
-		//jsonBytes, _ := jsoniter.Marshal(doc)
-		//shared.Printf("%s\n", string(jsonBytes))
 		msgType := "rocketchat_message"
+		actType := "rocketchat_message_created"
 		docUUID, _ := doc["uuid"].(string)
 		internalID, _ := doc["msg_id"].(string)
 		sBody, _ := doc["msg"].(string)
@@ -578,11 +581,50 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		fileName, fileOK := doc["file_name"].(string)
 		if fileOK {
 			msgType = "rocketchat_attachment"
+			actType = "rocketchat_attachment_added"
 			sBody = fileName
 		}
 		if sBody != "" {
 			body = &sBody
 		}
+		sParentInternalID, parentOK := doc["msg_parent"].(string)
+		if parentOK {
+			parentIID = &sParentInternalID
+			sParentID := shared.UUIDNonEmpty(ctx, endpoint, sParentInternalID)
+			parentID = &sParentID
+		}
+		isEdited, _ := doc["is_edited"].(bool)
+		if isEdited {
+			if fileOK {
+				jsonBytes, _ := jsoniter.Marshal(doc)
+				shared.Printf("WARNING: should not happen, message is an attachment and page edit at the same time:\n%s\n", jsonBytes)
+			}
+			actType = "rocketchat_message_edited"
+			name, _ := doc["edited_by_name"].(string)
+			// We can consider using 'edited_by_user_id' if name is empty
+			username, _ := doc["edited_by_username"].(string)
+			name, username = shared.PostprocessNameUsername(name, username, "")
+			userUUID := shared.UUIDAffs(ctx, source, "", name, username)
+			identity = &models.Identity{
+				ID:           userUUID,
+				DataSourceID: source,
+				Name:         name,
+				Username:     username,
+			}
+		} else {
+			name, _ := doc["user_name"].(string)
+			// We can consider using 'user_id' if name is empty
+			username, _ := doc["user_username"].(string)
+			name, username = shared.PostprocessNameUsername(name, username, "")
+			userUUID := shared.UUIDAffs(ctx, source, "", name, username)
+			identity = &models.Identity{
+				ID:           userUUID,
+				DataSourceID: source,
+				Name:         name,
+				Username:     username,
+			}
+		}
+		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_attachment_added
 		chanIID, _ := doc["channel_id"].(string)
 		chanCreatedAt, _ := doc["channel_created_at"].(time.Time)
 		chanUpdatedAt, _ := doc["channel_updated_at"].(time.Time)
@@ -597,17 +639,18 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 			gMaxUpstreamDt = updatedOn
 		}
 		gMaxUpstreamDtMtx.Unlock()
+		actUUID := shared.UUIDNonEmpty(ctx, docUUID, shared.ToESDate(updatedOn))
 		activities := []*models.MessageActivity{
 			{
-				CreatedAt: strfmt.DateTime(updatedOn),
-				Body:      body,
-				//ActivityType string `json:"ActivityType,omitempty"`
-				//ID string `json:"Id,omitempty"`
-				//Identity *Identity `json:"Identity,omitempty"`
-				//MessageID string `json:"MessageId,omitempty"`
-				//MessageInternalID string `json:"MessageInternalId,omitempty"`
-				//ParentID *string `json:"ParentId,omitempty"`
-				//ParentInternalID *string `json:"ParentInternalId,omitempty"`
+				ID:                actUUID,
+				ActivityType:      actType,
+				CreatedAt:         strfmt.DateTime(updatedOn),
+				Body:              body,
+				MessageID:         docUUID,
+				MessageInternalID: internalID,
+				ParentID:          parentID,
+				ParentInternalID:  parentIID,
+				Identity:          identity,
 			},
 		}
 		// Event

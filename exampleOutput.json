@@ -12,8 +12,20 @@
       "Message": {
         "Activities": [
           {
+            "ActivityType": "rocketchat_message_edited",
             "Body": "I hit same error in executing sawtooth command on ubuntu 18.04.04 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:24:13.113Z"
+            "CreatedAt": "2021-01-01T16:24:13.113Z",
+            "Id": "df8097e70596712ab60e0629ac92bc82f753d645",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
+              "Name": "gbpp-MISSING-NAME",
+              "Username": "gbpp"
+            },
+            "MessageId": "988b06ad27db82a35516bbd77b19c53cdead7621",
+            "MessageInternalId": "g3Lvxs8RKPx2diKPY",
+            "ParentId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
+            "ParentInternalId": "Bus5Pw3XLSpN4tpxS"
           }
         ],
         "Channel": {
@@ -39,35 +51,20 @@
       "Message": {
         "Activities": [
           {
-            "Body": "I hit same error in executing sawtooth command on current latest sawtooth 1.2.6 (pbft engine) on ubuntu 18.04.05 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:26:30.579Z"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-01T16:23:10.928Z",
-        "Id": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
-        "InternalId": "Bus5Pw3XLSpN4tpxS",
-        "Type": "rocketchat_message",
-        "URLs": [
-          "https://jira.hyperledger.org/browse/STL-1684"
-        ]
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
+            "ActivityType": "rocketchat_message_edited",
             "Body": "I hit same error in executing sawtooth command on ubuntu 18.04.05 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
-            "CreatedAt": "2021-01-01T16:26:30.575Z"
+            "CreatedAt": "2021-01-01T16:26:30.575Z",
+            "Id": "dd20375bb34e50b2b74f16d5049d433f05bec96e",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
+              "Name": "gbpp-MISSING-NAME",
+              "Username": "gbpp"
+            },
+            "MessageId": "bdf155f88ee42d99fa95eea4c4a0c543a99217d6",
+            "MessageInternalId": "rbDZqABYqJBNFwmti",
+            "ParentId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
+            "ParentInternalId": "Bus5Pw3XLSpN4tpxS"
           }
         ],
         "Channel": {
@@ -93,8 +90,55 @@
       "Message": {
         "Activities": [
           {
+            "ActivityType": "rocketchat_message_edited",
+            "Body": "I hit same error in executing sawtooth command on current latest sawtooth 1.2.6 (pbft engine) on ubuntu 18.04.05 LTS similar to https://jira.hyperledger.org/browse/STL-1684 but there seems no investigation/resolution since 2019 - any advice?",
+            "CreatedAt": "2021-01-01T16:26:30.579Z",
+            "Id": "4865e5878057f75094901b3a588796b9c59b0c5c",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "9f6f6c473b34bbefcd7039fad2cdb58d306ac4e5",
+              "Name": "gbpp-MISSING-NAME",
+              "Username": "gbpp"
+            },
+            "MessageId": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
+            "MessageInternalId": "Bus5Pw3XLSpN4tpxS"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-01-01T16:23:10.928Z",
+        "Id": "eec192be24ef825ec1d41054e30c3e3febb8cbf6",
+        "InternalId": "Bus5Pw3XLSpN4tpxS",
+        "Type": "rocketchat_message",
+        "URLs": [
+          "https://jira.hyperledger.org/browse/STL-1684"
+        ]
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_created",
             "Body": "Bach 26",
-            "CreatedAt": "2021-01-09T06:14:19.215Z"
+            "CreatedAt": "2021-01-09T06:14:19.215Z",
+            "Id": "298b053dd00df29e32ea410166186abf7c684d62",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "1f3ee8e14191b20ac73568df38157f132fda5ab9",
+              "Name": "Bach 26-MISSING-NAME",
+              "Username": "Bach 26"
+            },
+            "MessageId": "12047c75744e879ff43d4b1f2c680e1901798f5e",
+            "MessageInternalId": "2pLu7pEdfGzhksQ4e"
           }
         ],
         "Channel": {
@@ -118,58 +162,18 @@
       "Message": {
         "Activities": [
           {
-            "Body": "Hey guys, don't get this wrong in any way... we've been asked to look through different projects to recommend one for an Enterprise solution... we're really leaning towards Sawtooth instead of Fabric, but the activity is a bit concerning. Is the project under active development still? is there a roadmap we can use to back this project and convince the team that the project is alive and well?",
-            "CreatedAt": "2021-01-09T06:14:19.796Z"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-09T06:14:19.770Z",
-        "Id": "c2ae7cbd105f6cec8ef2bb7b73f1d07e5d7a85c7",
-        "InternalId": "7ydDWiFkFBJPy97qr",
-        "Type": "rocketchat_message",
-        "URLs": null
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
-            "Body": "Hi, is there any mechanism to fetch the timestamps for transactions or blocks without the use of blockInfo transaction processor. I see that the timestamps are not returned in any of the API exposed by rest-api service.",
-            "CreatedAt": "2021-01-12T10:32:00.027Z"
-          }
-        ],
-        "Channel": {
-          "CreatedAt": "2017-02-02T18:47:29.188Z",
-          "InternalId": "XjE5eXAG3sFAEnPb8",
-          "MemberCount": 2672,
-          "MessageCount": 40104,
-          "Name": "sawtooth",
-          "Slug": "https://chat.hyperledger.org sawtooth",
-          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
-          "UpdatedAt": "2021-08-13T02:26:03.436Z"
-        },
-        "CreatedAt": "2021-01-12T10:30:03.507Z",
-        "Id": "d01fa04d4cbf5697bfc93c219de20471df7999d4",
-        "InternalId": "8w2cLgYvz8L3YXPN8",
-        "Type": "rocketchat_message",
-        "URLs": null
-      }
-    },
-    {
-      "Message": {
-        "Activities": [
-          {
+            "ActivityType": "rocketchat_message_created",
             "Body": "I can give a mini-roadmap of what my team is working on re:Sawtooth -- we are working on Sawtooth 2 (sawtooth-core's master branch), which will run on top of Splinter (https://www.splinter.dev/). A lot effort is currently happening to make Splinter production-ready. Splinter has a published roadmap -- https://www.splinter.dev/community/planning/roadmap.html. Since my team is involved in multiple initiatives (Sawtooth, Splinter, Grid, Transact), we tend to focus on one area for any given Sprint. The last effort for Sawtooth was replacing  Sawtooth's transaction handling with Transact. The next push will be replacing consensus with a consensus library. The push after that will be making Sawtooth into a Splinter service. And after that, it will be about defining what is left for a Sawtooth 2 release. We are also at the same time working on replacing the CLI with a pure Rust CLI and turning Sawtooth into a library (sawtooth-lib). As far as publishing a roadmap, etc. - we are also a branch to update the website, and after that is complete we will likely add a roadmap page.",
-            "CreatedAt": "2021-01-11T18:10:51.833Z"
+            "CreatedAt": "2021-01-11T18:10:51.833Z",
+            "Id": "f7cf3d40ef465158e5ce66f2d1f94daa8f52d8f3",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "6fddcac3f5d66a9193499d2da3efd74f7a13fcea",
+              "Name": "Shawn Amundson",
+              "Username": "amundson"
+            },
+            "MessageId": "fc84e2d3517bbaa562efc25e860860ead2fb6929",
+            "MessageInternalId": "zfGdRj6McZJ2kEWAk"
           }
         ],
         "Channel": {
@@ -196,8 +200,20 @@
       "Message": {
         "Activities": [
           {
-            "Body": "Hello Everyone,\nDoes anyone know the troubleshooting step when sawtooth pod [ 3 containers each running pbft-engine, transaction-processor and sawtooth-validator respectively] start getting evicted from k8s cluster with reason [*The node was low on resource: ephemeral-storage*]. Due to this, pod becomes unresponsive and starts giving  UNKNOWN status for a certain time frame.",
-            "CreatedAt": "2021-01-12T11:09:44.783Z"
+            "ActivityType": "rocketchat_message_edited",
+            "Body": "Hi, is there any mechanism to fetch the timestamps for transactions or blocks without the use of blockInfo transaction processor. I see that the timestamps are not returned in any of the API exposed by rest-api service.",
+            "CreatedAt": "2021-01-12T10:32:00.027Z",
+            "Id": "e2370051047eb76315f74aadeff4d543e78bce45",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "6dc20c37573dbafdf1517b70cd750797a9aaf394",
+              "Name": "CodeReaper-MISSING-NAME",
+              "Username": "CodeReaper"
+            },
+            "MessageId": "d01fa04d4cbf5697bfc93c219de20471df7999d4",
+            "MessageInternalId": "8w2cLgYvz8L3YXPN8",
+            "ParentId": "4a4a4a0e11a8b7ca6ea1aac94f8e4e41583e2590",
+            "ParentInternalId": "G5E8C4HsS2aSnmWd2"
           }
         ],
         "Channel": {
@@ -210,9 +226,9 @@
           "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
           "UpdatedAt": "2021-08-13T02:26:03.436Z"
         },
-        "CreatedAt": "2021-01-12T11:09:44.760Z",
-        "Id": "030f443801a7d28b6711961301e1b7316435504a",
-        "InternalId": "25TNjtuSrnmuY8mj4",
+        "CreatedAt": "2021-01-12T10:30:03.507Z",
+        "Id": "d01fa04d4cbf5697bfc93c219de20471df7999d4",
+        "InternalId": "8w2cLgYvz8L3YXPN8",
         "Type": "rocketchat_message",
         "URLs": null
       }
@@ -221,8 +237,53 @@
       "Message": {
         "Activities": [
           {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "Hey guys, don't get this wrong in any way... we've been asked to look through different projects to recommend one for an Enterprise solution... we're really leaning towards Sawtooth instead of Fabric, but the activity is a bit concerning. Is the project under active development still? is there a roadmap we can use to back this project and convince the team that the project is alive and well?",
+            "CreatedAt": "2021-01-09T06:14:19.796Z",
+            "Id": "865eb3be3ac27ae5e5a62387f9bbf2c46dafde28",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "1f3ee8e14191b20ac73568df38157f132fda5ab9",
+              "Name": "Bach 26-MISSING-NAME",
+              "Username": "Bach 26"
+            },
+            "MessageId": "c2ae7cbd105f6cec8ef2bb7b73f1d07e5d7a85c7",
+            "MessageInternalId": "7ydDWiFkFBJPy97qr"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-01-09T06:14:19.770Z",
+        "Id": "c2ae7cbd105f6cec8ef2bb7b73f1d07e5d7a85c7",
+        "InternalId": "7ydDWiFkFBJPy97qr",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_message_edited",
             "Body": "Hi, is there any mechanism to fetch the timestamps for transactions or blocks without the use of blockInfo transaction processor? I see that the timestamps are not returned in any of the API exposed by rest-api service.",
-            "CreatedAt": "2021-01-12T10:32:00.032Z"
+            "CreatedAt": "2021-01-12T10:32:00.032Z",
+            "Id": "662fc8b056726375c75b0ef2c6a1ccd5de3f9153",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "6dc20c37573dbafdf1517b70cd750797a9aaf394",
+              "Name": "CodeReaper-MISSING-NAME",
+              "Username": "CodeReaper"
+            },
+            "MessageId": "4a4a4a0e11a8b7ca6ea1aac94f8e4e41583e2590",
+            "MessageInternalId": "G5E8C4HsS2aSnmWd2"
           }
         ],
         "Channel": {
@@ -246,8 +307,53 @@
       "Message": {
         "Activities": [
           {
+            "ActivityType": "rocketchat_message_created",
+            "Body": "Hello Everyone,\nDoes anyone know the troubleshooting step when sawtooth pod [ 3 containers each running pbft-engine, transaction-processor and sawtooth-validator respectively] start getting evicted from k8s cluster with reason [*The node was low on resource: ephemeral-storage*]. Due to this, pod becomes unresponsive and starts giving  UNKNOWN status for a certain time frame.",
+            "CreatedAt": "2021-01-12T11:09:44.783Z",
+            "Id": "f06748dbf6f6e04e7bb4dbf4adeccf2d584a16f8",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "b6bdda9778fc26487c5b5452332288fa1f648feb",
+              "Name": "AbhijeetBH 2-MISSING-NAME",
+              "Username": "AbhijeetBH 2"
+            },
+            "MessageId": "030f443801a7d28b6711961301e1b7316435504a",
+            "MessageInternalId": "25TNjtuSrnmuY8mj4"
+          }
+        ],
+        "Channel": {
+          "CreatedAt": "2017-02-02T18:47:29.188Z",
+          "InternalId": "XjE5eXAG3sFAEnPb8",
+          "MemberCount": 2672,
+          "MessageCount": 40104,
+          "Name": "sawtooth",
+          "Slug": "https://chat.hyperledger.org sawtooth",
+          "Topic": "Sawtooth 1.2 has been released! https://sawtooth.hyperledger.org/release/chime/",
+          "UpdatedAt": "2021-08-13T02:26:03.436Z"
+        },
+        "CreatedAt": "2021-01-12T11:09:44.760Z",
+        "Id": "030f443801a7d28b6711961301e1b7316435504a",
+        "InternalId": "25TNjtuSrnmuY8mj4",
+        "Type": "rocketchat_message",
+        "URLs": null
+      }
+    },
+    {
+      "Message": {
+        "Activities": [
+          {
+            "ActivityType": "rocketchat_attachment_added",
             "Body": "Screenshot from 2021-01-11 14-13-37.png",
-            "CreatedAt": "2021-01-12T11:10:10.680Z"
+            "CreatedAt": "2021-01-12T11:10:10.680Z",
+            "Id": "4e3cb6ec78d4780aaff272943a1626c0fa55f196",
+            "Identity": {
+              "DataSourceId": "rocketchat",
+              "Id": "b6bdda9778fc26487c5b5452332288fa1f648feb",
+              "Name": "AbhijeetBH 2-MISSING-NAME",
+              "Username": "AbhijeetBH 2"
+            },
+            "MessageId": "63762eccf588c7c176f2c0d41c6824a934fc68ff",
+            "MessageInternalId": "zdkhZ958fsEywDKh3"
           }
         ],
         "Channel": {
