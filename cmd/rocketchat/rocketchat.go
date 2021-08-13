@@ -972,7 +972,7 @@ func (j *DSRocketchat) Sync(ctx *shared.Ctx) (err error) {
 		shared.Printf("%s fetching from %v (%d threads)\n", j.Endpoint(), ctx.DateFrom, thrN)
 	}
 	if ctx.DateFrom == nil {
-		ctx.DateFrom = shared.GetLastUpdate(ctx, j.URL)
+		ctx.DateFrom = shared.GetLastUpdate(ctx, j.Endpoint())
 		if ctx.DateFrom != nil {
 			shared.Printf("%s resuming from %v (%d threads)\n", j.Endpoint(), ctx.DateFrom, thrN)
 		}
