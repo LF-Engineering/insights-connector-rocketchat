@@ -176,6 +176,10 @@ definitions:
         type: string
         example: ok
         description: can be message, attachment
+      DataSourceId:
+        type: string
+        example: rocketchat
+        description: data source type slug (FK)
       Channel:
         type: object
         $ref: "#/definitions/Channel"

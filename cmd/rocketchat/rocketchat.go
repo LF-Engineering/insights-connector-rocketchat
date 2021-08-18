@@ -754,12 +754,13 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		// Event
 		event := &models.Event{
 			Message: &models.Message{
-				ID:         docUUID,
-				MessageID:  messageID,
-				Type:       msgType,
-				URLs:       urls,
-				CreatedAt:  strfmt.DateTime(createdOn),
-				Activities: activities,
+				ID:           docUUID,
+				MessageID:    messageID,
+				Type:         msgType,
+				DataSourceID: source,
+				URLs:         urls,
+				CreatedAt:    strfmt.DateTime(createdOn),
+				Activities:   activities,
 				Channel: &models.Channel{
 					ID:           chanUUID,
 					ChannelID:    chanIID,
