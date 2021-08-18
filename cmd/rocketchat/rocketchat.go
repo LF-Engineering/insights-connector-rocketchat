@@ -575,7 +575,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		msgType := "rocketchat_message"
 		actType := "rocketchat_message_created"
 		docUUID, _ := doc["uuid"].(string)
-		internalID, _ := doc["msg_id"].(string)
+		messageID, _ := doc["msg_id"].(string)
 		sBody, _ := doc["msg"].(string)
 		urls, _ = doc["message_urls"].([]string)
 		fileName, fileOK := doc["file_name"].(string)
@@ -587,10 +587,10 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		if sBody != "" {
 			body = &sBody
 		}
-		sParentInternalID, parentOK := doc["msg_parent"].(string)
+		sParentMessageID, parentOK := doc["msg_parent"].(string)
 		if parentOK {
-			parentIID = &sParentInternalID
-			sParentID := shared.UUIDNonEmpty(ctx, endpoint, sParentInternalID)
+			parentIID = &sParentMessageID
+			sParentID := shared.UUIDNonEmpty(ctx, endpoint, sParentMessageID)
 			parentID = &sParentID
 		}
 		isEdited, _ := doc["is_edited"].(bool)
@@ -641,6 +641,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		chanUsers, _ := doc["channel_num_users"].(float64)
 		createdOn, _ := doc["created_at"].(time.Time)
 		updatedOn, _ := doc["updated_at"].(time.Time)
+		chanUUID := shared.UUIDNonEmpty(ctx, endpoint, chanIID)
 		actDt := updatedOn
 		if isEdited {
 			editedOn, okEdited := doc["edited_at"].(time.Time)
@@ -648,18 +649,18 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				actDt = editedOn
 			}
 		}
-		actUUID := shared.UUIDNonEmpty(ctx, docUUID, shared.ToESDate(actDt))
+		actUUID := shared.UUIDNonEmpty(ctx, docUUID, actType, shared.ToESDate(actDt))
 		activities := []*models.MessageActivity{
 			{
-				ID:                actUUID,
-				ActivityType:      actType,
-				CreatedAt:         strfmt.DateTime(actDt),
-				Body:              body,
-				MessageID:         docUUID,
-				MessageInternalID: internalID,
-				ParentID:          parentID,
-				ParentInternalID:  parentIID,
-				Identity:          identity,
+				ID:              actUUID,
+				ActivityType:    actType,
+				CreatedAt:       strfmt.DateTime(actDt),
+				Body:            body,
+				MessageKey:      docUUID,
+				MessageID:       messageID,
+				ParentKey:       parentID,
+				ParentMessageID: parentIID,
+				Identity:        identity,
 			},
 		}
 		// Reactions
@@ -701,15 +702,15 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 					}
 					reactionUUID := shared.UUIDNonEmpty(ctx, docUUID, "reaction", userUUID, typ)
 					activity := &models.MessageActivity{
-						ID:                reactionUUID,
-						ActivityType:      reactionType,
-						Body:              &desc,
-						CreatedAt:         strfmt.DateTime(actDt),
-						MessageID:         docUUID,
-						MessageInternalID: internalID,
-						ParentID:          parentID,
-						ParentInternalID:  parentIID,
-						Identity:          identity,
+						ID:              reactionUUID,
+						ActivityType:    reactionType,
+						Body:            &desc,
+						CreatedAt:       strfmt.DateTime(actDt),
+						MessageKey:      docUUID,
+						MessageID:       messageID,
+						ParentKey:       parentID,
+						ParentMessageID: parentIID,
+						Identity:        identity,
 						Reaction: &models.MessageReaction{
 							Author: identity,
 							Emoji:  emoji,
@@ -738,14 +739,14 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				}
 				mentionUUID := shared.UUIDNonEmpty(ctx, docUUID, "mention", userUUID)
 				activity := &models.MessageActivity{
-					ID:                mentionUUID,
-					ActivityType:      mentionType,
-					CreatedAt:         strfmt.DateTime(actDt),
-					MessageID:         docUUID,
-					MessageInternalID: internalID,
-					ParentID:          parentID,
-					ParentInternalID:  parentIID,
-					Identity:          identity,
+					ID:              mentionUUID,
+					ActivityType:    mentionType,
+					CreatedAt:       strfmt.DateTime(actDt),
+					MessageKey:      docUUID,
+					MessageID:       messageID,
+					ParentKey:       parentID,
+					ParentMessageID: parentIID,
+					Identity:        identity,
 				}
 				activities = append(activities, activity)
 			}
@@ -754,13 +755,14 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 		event := &models.Event{
 			Message: &models.Message{
 				ID:         docUUID,
-				InternalID: internalID,
+				MessageID:  messageID,
 				Type:       msgType,
 				URLs:       urls,
 				CreatedAt:  strfmt.DateTime(createdOn),
 				Activities: activities,
 				Channel: &models.Channel{
-					InternalID:   chanIID,
+					ID:           chanUUID,
+					ChannelID:    chanIID,
 					CreatedAt:    strfmt.DateTime(chanCreatedAt),
 					UpdatedAt:    strfmt.DateTime(chanUpdatedAt),
 					Slug:         endpoint,
