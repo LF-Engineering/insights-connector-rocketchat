@@ -36,7 +36,7 @@ var (
 	// MustWaitRE - parse too many requests error message
 	MustWaitRE = regexp.MustCompile(`must wait (\d+) seconds before`)
 	// RocketchatDataSource - constant
-	RocketchatDataSource = &models.DataSource{Name: "RocketChat", Slug: "rocketchat"}
+	RocketchatDataSource = &models.DataSource{Name: "RocketChat", Slug: "rocketchat", Model: "chat"}
 	gRocketchatMetaData  = &models.MetaData{BackendName: "rocketchat", BackendVersion: RocketchatBackendVersion}
 	// For debugging all documents
 	// gM  = &sync.Mutex{}

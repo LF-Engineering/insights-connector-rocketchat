@@ -21,6 +21,9 @@ definitions:
       Name:
         type: string
         example: RocketChat
+      Model:
+        type: string
+        example: chat
   MetaData:
     type: object
     properties:
