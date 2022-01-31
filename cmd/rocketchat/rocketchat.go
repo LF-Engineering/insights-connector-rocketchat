@@ -12,7 +12,7 @@ import (
 	neturl "net/url"
 
 	"github.com/LF-Engineering/dev-analytics-libraries/emoji"
-	"github.com/LF-Engineering/insights-datasource-rocketchat/gen/models"
+	"github.com/LF-Engineering/insights-connector-rocketchat/gen/models"
 	shared "github.com/LF-Engineering/insights-datasource-shared"
 	"github.com/go-openapi/strfmt"
 	jsoniter "github.com/json-iterator/go"

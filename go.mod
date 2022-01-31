@@ -1,4 +1,4 @@
-module github.com/LF-Engineering/insights-datasource-rocketchat
+module github.com/LF-Engineering/insights-connector-rocketchat
 
 go 1.15
 
