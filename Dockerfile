@@ -1,8 +1,9 @@
 FROM alpine:3.14
 WORKDIR /app
 ENV ROCKETCHAT_URL='<ROCKETCHAT-URL>'
-ENV ROCKETCHAT_PROJECT='<ROCKETCHAT-PROJECT>'
-ENV ES_URL='<ROCKETCHAT-ES-URL>'
+ENV ROCKETCHAT_USERID='<ROCKETCHAT-USERID>'
+ENV ROCKETCAT_API_TOKEN='<ROCKETCAT-API-TOKEN>'
+ENV ES_URL='<ES-URL>'
 ENV STAGE='<STAGE>'
 ENV ELASTIC_LOG_URL='<ELASTIC-LOG-URL>'
 ENV ELASTIC_LOG_USER='<ELASTIC-LOG-USER>'
@@ -11,4 +12,4 @@ ENV ELASTIC_LOG_PASSWORD='<ELASTIC-LOG-PASSWORD>'
 RUN apk update && apk add --no-cache bash
 RUN ls -ltra
 COPY rocketchat ./
-CMD ./rocketchat --rocketchat-url=${ROCKETCHAT_URL} --rocketchat-project=${ROCKETCHAT_PROJECT} --rocketchat-es-url=${ES_URL}
+CMD ./rocketchat --rocketchat-url=${ROCKETCHAT_URL} --rocketchat-user=${ROCKETCHAT_USERID} --rocketchat-token=${ROCKETCHAT_API_TOKEN} --rocketchat-es-url=${ES_URL}

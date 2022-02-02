@@ -13,6 +13,7 @@ import (
 	neturl "net/url"
 
 	shared "github.com/LF-Engineering/insights-datasource-shared"
+	"github.com/LF-Engineering/insights-datasource-shared/cryptography"
 	elastic "github.com/LF-Engineering/insights-datasource-shared/elastic"
 	"github.com/LF-Engineering/insights-datasource-shared/emoji"
 	logger "github.com/LF-Engineering/insights-datasource-shared/ingestjob"
@@ -137,6 +138,7 @@ func (j *DSRocketchat) AddFlags() {
 
 // ParseArgs - parse rocketchat specific environment variables
 func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
+	encrypt, err := cryptography.NewEncryptionClient()
 	// RocketChat Server URL
 	if shared.FlagPassed(ctx, "url") && *j.FlagURL != "" {
 		j.URL = *j.FlagURL
@@ -155,7 +157,10 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 
 	// User
 	if shared.FlagPassed(ctx, "user") && *j.FlagUser != "" {
-		j.User = *j.FlagUser
+		j.User, err = encrypt.Decrypt(*j.FlagUser)
+		if err != nil {
+			return err
+		}
 	}
 	if ctx.EnvSet("USER") {
 		j.User = ctx.Env("USER")
@@ -166,7 +171,10 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 
 	// Token
 	if shared.FlagPassed(ctx, "token") && *j.FlagToken != "" {
-		j.Token = *j.FlagToken
+		j.Token, err = encrypt.Decrypt(*j.FlagToken)
+		if err != nil {
+			return err
+		}
 	}
 	if ctx.EnvSet("TOKEN") {
 		j.Token = ctx.Env("TOKEN")
