@@ -921,18 +921,46 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 		if len(*docs) > 0 {
 			// actual output
 			shared.Printf("output processing(%d/%d/%v)\n", len(items), len(*docs), final)
-			data, err := j.GetModelData(ctx, *docs)
+			var (
+				data      map[string][]interface{}
+				jsonBytes []byte
+				err       error
+			)
+			data, err = j.GetModelData(ctx, *docs)
+			if err == nil {
+				// shared.Printf("Error: %+v\n", err)
+				// return
+				if j.Publisher != nil {
+					insightsStr := "insights"
+					messageStr := "messages"
+					envStr := os.Getenv("STAGE")
+					for k, v := range data {
+						switch k {
+						case "created":
+							ev, _ := v[0].(rocketchat.MessageCreatedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "edited":
+							ev, _ := v[0].(rocketchat.MessageEditedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						default:
+							err = fmt.Errorf("unknown event type '%s'", k)
+						}
+						if err != nil {
+							break
+						}
+					}
+				} else {
+					jsonBytes, err = jsoniter.Marshal(data)
+				}
+			}
 			if err != nil {
 				shared.Printf("Error: %+v\n", err)
 				return
 			}
-			// FIXME: actual output to some consumer...
-			jsonBytes, err := jsoniter.Marshal(data)
-			if err != nil {
-				shared.Printf("Error: %+v\n", err)
-				return
+			if j.Publisher == nil {
+				shared.Printf("%s\n", string(jsonBytes))
 			}
-			shared.Printf("%s\n", string(jsonBytes))
+
 			*docs = []interface{}{}
 			gMaxUpstreamDtMtx.Lock()
 			defer gMaxUpstreamDtMtx.Unlock()
