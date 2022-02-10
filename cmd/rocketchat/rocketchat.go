@@ -45,8 +45,6 @@ var (
 	// MustWaitRE - parse too many requests error message
 	MustWaitRE = regexp.MustCompile(`must wait (\d+) seconds before`)
 	// RocketchatDataSource - constant
-	//RocketchatDataSource = &models.DataSource{Name: "RocketChat", Slug: "rocketchat", Model: "chat"}
-	//gRocketchatMetaData  = &models.MetaData{BackendName: "rocketchat", BackendVersion: RocketchatBackendVersion}
 	// For debugging all documents
 	// gM  = &sync.Mutex{}
 	// gRa []map[string]interface{}
@@ -705,7 +703,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		contributors := make([]insights.Contributor, 0)
 		var (
 			urls []string
-			//identity  *models.Identity
 		)
 		doc, _ := iDoc.(map[string]interface{})
 		messageID, _ := doc["msg_id"].(string)
@@ -725,7 +722,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				name, _ = doc["user_name"].(string)
 				username, _ = doc["user_username"].(string)
 			}
-			name, username = shared.PostprocessNameUsername(name, username, "")
 			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
 			if err != nil {
 				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
@@ -748,7 +744,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			name, _ := doc["user_name"].(string)
 			// We can consider using 'user_id' if name is empty
 			username, _ := doc["user_username"].(string)
-			name, username = shared.PostprocessNameUsername(name, username, "")
 			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
 			if err != nil {
 				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
@@ -824,7 +819,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						desc += " "
 					}
 					desc += username + " reacted with " + emoji
-					name, username = shared.PostprocessNameUsername(name, username, "")
 					userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
 					if err != nil {
 						shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
@@ -852,7 +846,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				// map[id:XYZ name:RJ username:rjones]
 				name, _ := mentionData["name"].(string)
 				username, _ := mentionData["username"].(string)
-				name, username = shared.PostprocessNameUsername(name, username, "")
 				userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
 				if err != nil {
 					shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
