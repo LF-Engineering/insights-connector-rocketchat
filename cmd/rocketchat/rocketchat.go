@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,10 +12,18 @@ import (
 
 	neturl "net/url"
 
-	"github.com/LF-Engineering/dev-analytics-libraries/emoji"
-	"github.com/LF-Engineering/insights-datasource-rocketchat/gen/models"
 	shared "github.com/LF-Engineering/insights-datasource-shared"
-	"github.com/go-openapi/strfmt"
+	"github.com/LF-Engineering/insights-datasource-shared/cryptography"
+	elastic "github.com/LF-Engineering/insights-datasource-shared/elastic"
+	"github.com/LF-Engineering/insights-datasource-shared/emoji"
+	logger "github.com/LF-Engineering/insights-datasource-shared/ingestjob"
+	"github.com/LF-Engineering/lfx-event-schema/service"
+	"github.com/LF-Engineering/lfx-event-schema/service/insights"
+	"github.com/LF-Engineering/lfx-event-schema/service/insights/rocketchat"
+	"github.com/LF-Engineering/lfx-event-schema/service/user"
+	"github.com/LF-Engineering/lfx-event-schema/utils/datalake"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	jsoniter "github.com/json-iterator/go"
 	// jsoniter "github.com/json-iterator/go"
 )
@@ -36,13 +45,20 @@ var (
 	// MustWaitRE - parse too many requests error message
 	MustWaitRE = regexp.MustCompile(`must wait (\d+) seconds before`)
 	// RocketchatDataSource - constant
-	RocketchatDataSource = &models.DataSource{Name: "RocketChat", Slug: "rocketchat", Model: "chat"}
-	gRocketchatMetaData  = &models.MetaData{BackendName: "rocketchat", BackendVersion: RocketchatBackendVersion}
 	// For debugging all documents
 	// gM  = &sync.Mutex{}
 	// gRa []map[string]interface{}
 	// gRi []map[string]interface{}
+
+	// RocketChatConnector ...
+	RocketChatConnector = "rocketchat-connector"
+	// RocketChatDatasource ...
+	RocketChatDatasource = "rochetchat"
 )
+
+type Publisher interface {
+	PushEvents(action, source, eventType, subEventType, env string, data []interface{}) error
+}
 
 // DSRocketchat - DS implementation for rocketchat - does nothing at all, just presents a skeleton code
 type DSRocketchat struct {
@@ -60,6 +76,51 @@ type DSRocketchat struct {
 	FlagMaxItems *int
 	FlagMinRate  *int
 	FlagWaitRate *bool
+	// Publisher & stream
+	Publisher
+	Stream string // stream to publish the data
+	Logger logger.Logger
+}
+
+// AddPublisher - sets Kinesis publisher
+func (j *DSRocketchat) AddPublisher(publisher Publisher) {
+	j.Publisher = publisher
+}
+
+// AddLogger - adds logger
+func (j *DSRocketchat) AddLogger(ctx *shared.Ctx) {
+	client, err := elastic.NewClientProvider(&elastic.Params{
+		URL:      os.Getenv("ELASTIC_LOG_URL"),
+		Password: os.Getenv("ELASTIC_LOG_PASSWORD"),
+		Username: os.Getenv("ELASTIC_LOG_USER"),
+	})
+	if err != nil {
+		shared.Printf("AddLogger error: %+v", err)
+		return
+	}
+	logProvider, err := logger.NewLogger(client, os.Getenv("STAGE"))
+	if err != nil {
+		shared.Printf("AddLogger error: %+v", err)
+		return
+	}
+	j.Logger = *logProvider
+}
+
+// WriteLog - writes to log
+func (j *DSRocketchat) WriteLog(ctx *shared.Ctx, status, message string) {
+	_ = j.Logger.Write(&logger.Log{
+		Connector: RocketChatDatasource,
+		Configuration: []map[string]string{
+			{
+				"CONFLUENCE_URL": j.URL,
+				"ES_URL":         ctx.ESURL,
+				"ProjectSlug":    ctx.Project,
+			}},
+		Status:    status,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Message:   message,
+	})
 }
 
 // AddFlags - add RocketChat specific flags
@@ -75,6 +136,7 @@ func (j *DSRocketchat) AddFlags() {
 
 // ParseArgs - parse rocketchat specific environment variables
 func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
+	encrypt, err := cryptography.NewEncryptionClient()
 	// RocketChat Server URL
 	if shared.FlagPassed(ctx, "url") && *j.FlagURL != "" {
 		j.URL = *j.FlagURL
@@ -93,7 +155,10 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 
 	// User
 	if shared.FlagPassed(ctx, "user") && *j.FlagUser != "" {
-		j.User = *j.FlagUser
+		j.User, err = encrypt.Decrypt(*j.FlagUser)
+		if err != nil {
+			return err
+		}
 	}
 	if ctx.EnvSet("USER") {
 		j.User = ctx.Env("USER")
@@ -104,7 +169,10 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 
 	// Token
 	if shared.FlagPassed(ctx, "token") && *j.FlagToken != "" {
-		j.Token = *j.FlagToken
+		j.Token, err = encrypt.Decrypt(*j.FlagToken)
+		if err != nil {
+			return err
+		}
 	}
 	if ctx.EnvSet("TOKEN") {
 		j.Token = ctx.Env("TOKEN")
@@ -151,10 +219,6 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 	if present {
 		j.WaitRate = waitRate
 	}
-
-	// NOTE: don't forget this
-	gRocketchatMetaData.Project = ctx.Project
-	gRocketchatMetaData.Tags = ctx.Tags
 	return
 }
 
@@ -191,9 +255,21 @@ func (j *DSRocketchat) Init(ctx *shared.Ctx) (err error) {
 		return
 	}
 	if ctx.Debug > 1 {
-		m := &models.Data{}
-		shared.Printf("RocketChat: %+v\nshared context: %s\nModel: %+v", j, ctx.Info(), m)
+		shared.Printf("RocketChat: %+v\nshared context: : %+v", j, ctx.Info())
 	}
+
+	if j.Stream != "" {
+		sess, err := session.NewSession()
+		if err != nil {
+			return err
+		}
+		s3Client := s3.New(sess)
+		objectStore := datalake.NewS3ObjectStore(s3Client)
+		datalakeClient := datalake.NewStoreClient(&objectStore)
+		j.AddPublisher(&datalakeClient)
+	}
+	j.AddLogger(ctx)
+
 	return
 }
 
@@ -552,56 +628,92 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 }
 
 // GetModelData - return data in swagger format
-func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *models.Data) {
+func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data map[string][]interface{}, err error) {
+	data = make(map[string][]interface{})
+	defer func() {
+		if err != nil {
+			return
+		}
+
+		messageBaseEvent := rocketchat.MessageBaseEvent{
+			Connector:        insights.RocketChatConnector,
+			ConnectorVersion: RocketchatBackendVersion,
+			Source:           insights.RocketChatSource,
+		}
+
+		for k, v := range data {
+			switch k {
+			case "created":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.MessageCreatedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+
+				ary := []interface{}{}
+				for _, content := range v {
+					ary = append(ary, rocketchat.MessageCreatedEvent{
+						MessageBaseEvent: messageBaseEvent,
+						BaseEvent:        baseEvent,
+						Payload:          content.(rocketchat.CreateMessage),
+					})
+				}
+				data[k] = ary
+
+			case "edited":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.MessageEditedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+
+				ary := []interface{}{}
+				for _, content := range v {
+					ary = append(ary, rocketchat.MessageEditedEvent{
+						MessageBaseEvent: messageBaseEvent,
+						BaseEvent:        baseEvent,
+						Payload:          content.(rocketchat.EditedMessage),
+					})
+				}
+				data[k] = ary
+
+			default:
+				err = fmt.Errorf("unknown message '%s' event", k)
+				return
+			}
+
+		}
+
+	}()
+
 	endpoint := j.Endpoint()
-	data = &models.Data{
-		DataSource: RocketchatDataSource,
-		MetaData:   gRocketchatMetaData,
-		Endpoint: &models.DataEndpoint{
-			RocketChatServer:  j.URL,
-			RocketChatChannel: j.Channel,
-		},
-	}
-	source := data.DataSource.Slug
+	attachments := make([]string, 0)
+	key := ""
+	userUUID, chanUUID, messageUUID := "", "", ""
+	source := RocketChatDatasource
 	for _, iDoc := range docs {
+		contributors := make([]insights.Contributor, 0)
 		var (
-			urls      []string
-			body      *string
-			parentIID *string
-			parentID  *string
-			identity  *models.Identity
+			urls []string
 		)
 		doc, _ := iDoc.(map[string]interface{})
-		msgType := "rocketchat_message"
-		actType := "rocketchat_message_created"
-		docUUID, _ := doc["uuid"].(string)
 		messageID, _ := doc["msg_id"].(string)
-		sBody, _ := doc["msg"].(string)
 		urls, _ = doc["message_urls"].([]string)
 		fileName, fileOK := doc["file_name"].(string)
 		if fileOK {
-			msgType = "rocketchat_attachment"
-			actType = "rocketchat_attachment_added"
-			sBody = fileName
-		}
-		if sBody != "" {
-			body = &sBody
-		}
-		sParentMessageID, parentOK := doc["msg_parent"].(string)
-		if parentOK {
-			parentIID = &sParentMessageID
-			sParentID := shared.UUIDNonEmpty(ctx, endpoint, sParentMessageID)
-			parentID = &sParentID
+			attachments = append(attachments, fileName)
 		}
 		isEdited, _ := doc["is_edited"].(bool)
 		if isEdited {
-			if fileOK {
-				// jsonBytes, _ := jsoniter.Marshal(doc)
-				// shared.Printf("should not happen, message is an attachment and page edit at the same time:\n%s\n", jsonBytes)
-				actType = "rocketchat_attachment_edited"
-			} else {
-				actType = "rocketchat_message_edited"
-			}
+			key = "edited"
 			name, _ := doc["edited_by_name"].(string)
 			// We can consider using 'edited_by_user_id' if name is empty
 			username, _ := doc["edited_by_username"].(string)
@@ -610,66 +722,81 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 				name, _ = doc["user_name"].(string)
 				username, _ = doc["user_username"].(string)
 			}
-			name, username = shared.PostprocessNameUsername(name, username, "")
-			userUUID := shared.UUIDAffs(ctx, source, "", name, username)
-			identity = &models.Identity{
-				ID:           userUUID,
-				DataSourceID: source,
-				Name:         name,
-				Username:     username,
+			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+			if err != nil {
+				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+				return
 			}
+			contributor := insights.Contributor{
+				Role:   insights.AuthorRole,
+				Weight: 1.0,
+				Identity: user.UserIdentityObjectBase{
+					ID:         userUUID,
+					IsVerified: false,
+					Name:       name,
+					Username:   username,
+					Source:     source,
+				},
+			}
+			contributors = append(contributors, contributor)
 		} else {
+			key = "created"
 			name, _ := doc["user_name"].(string)
 			// We can consider using 'user_id' if name is empty
 			username, _ := doc["user_username"].(string)
-			name, username = shared.PostprocessNameUsername(name, username, "")
-			userUUID := shared.UUIDAffs(ctx, source, "", name, username)
-			identity = &models.Identity{
-				ID:           userUUID,
-				DataSourceID: source,
-				Name:         name,
-				Username:     username,
+			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+			if err != nil {
+				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+				return
 			}
+			contributor := insights.Contributor{
+				Role:   insights.AuthorRole,
+				Weight: 1.0,
+				Identity: user.UserIdentityObjectBase{
+					ID:         userUUID,
+					IsVerified: false,
+					Name:       name,
+					Username:   username,
+					Source:     source,
+				},
+			}
+			contributors = append(contributors, contributor)
 		}
+
 		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added, rocketchat_attachment_edited
 		chanIID, _ := doc["channel_id"].(string)
-		chanCreatedAt, _ := doc["channel_created_at"].(time.Time)
-		chanUpdatedAt, _ := doc["channel_updated_at"].(time.Time)
 		chanName, _ := doc["channel_name"].(string)
 		chanTopic, _ := doc["channel_topic"].(string)
-		chanMsgs, _ := doc["channel_num_messages"].(float64)
 		chanUsers, _ := doc["channel_num_users"].(float64)
-		createdOn, _ := doc["created_at"].(time.Time)
 		updatedOn, _ := doc["updated_at"].(time.Time)
-		chanUUID := shared.UUIDNonEmpty(ctx, endpoint, chanIID)
+		chanUUID, err = rocketchat.GenerateRocketChatChannelID(endpoint, chanIID)
+		if err != nil {
+			shared.Printf("GenerateRocketChatChannelID(%s,%s): %+v for %+v\n", endpoint, chanIID, err, doc)
+			return
+		}
 		actDt := updatedOn
+		channel := rocketchat.Channel{
+			ID:              chanUUID,
+			SourceID:        chanIID,
+			Domain:          endpoint,
+			MemberCount:     int(chanUsers),
+			Name:            chanName,
+			Topic:           chanTopic,
+			SyncTimestamp:   time.Now(),
+			SourceTimestamp: actDt,
+		}
 		if isEdited {
 			editedOn, okEdited := doc["edited_at"].(time.Time)
 			if okEdited {
 				actDt = editedOn
 			}
 		}
-		actUUID := shared.UUIDNonEmpty(ctx, docUUID, actType, shared.ToESDate(actDt))
-		activities := []*models.MessageActivity{
-			{
-				ID:              actUUID,
-				ActivityType:    actType,
-				CreatedAt:       strfmt.DateTime(actDt),
-				Body:            body,
-				MessageKey:      docUUID,
-				MessageID:       messageID,
-				ParentKey:       parentID,
-				ParentMessageID: parentIID,
-				Identity:        identity,
-			},
-		}
+
 		// Reactions
 		reactionsAry, okReactions := doc["reactions"].([]map[string]interface{})
 		if okReactions {
-			reactionType := "rocketchat_message_reaction"
 			for _, reactionData := range reactionsAry {
 				// map[count:1 emoji:UNICODE names:[] type::handshake: usernames:[rjones]]
-				typ, _ := reactionData["type"].(string)
 				emoji, _ := reactionData["emoji"].(string)
 				names, _ := reactionData["names"].([]interface{})
 				usernames, _ := reactionData["usernames"].([]interface{})
@@ -692,89 +819,83 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data *
 						desc += " "
 					}
 					desc += username + " reacted with " + emoji
-					name, username = shared.PostprocessNameUsername(name, username, "")
-					userUUID := shared.UUIDAffs(ctx, source, "", name, username)
-					identity = &models.Identity{
-						ID:           userUUID,
-						DataSourceID: source,
-						Name:         name,
-						Username:     username,
+					userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+					if err != nil {
+						shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+						return
 					}
-					reactionUUID := shared.UUIDNonEmpty(ctx, docUUID, "reaction", userUUID, typ)
-					activity := &models.MessageActivity{
-						ID:              reactionUUID,
-						ActivityType:    reactionType,
-						Body:            &desc,
-						CreatedAt:       strfmt.DateTime(actDt),
-						MessageKey:      docUUID,
-						MessageID:       messageID,
-						ParentKey:       parentID,
-						ParentMessageID: parentIID,
-						Identity:        identity,
-						Reaction: &models.MessageReaction{
-							Author: identity,
-							Emoji:  emoji,
-							Type:   typ,
+					contributor := insights.Contributor{
+						Role:   insights.ReactionAuthorRole,
+						Weight: 1.0,
+						Identity: user.UserIdentityObjectBase{
+							ID:         userUUID,
+							IsVerified: false,
+							Name:       name,
+							Username:   username,
+							Source:     source,
 						},
 					}
-					activities = append(activities, activity)
+					contributors = append(contributors, contributor)
 				}
 			}
 		}
 		// Mentions
 		mentionsAry, okMentions := doc["mentions"].([]map[string]interface{})
 		if okMentions {
-			mentionType := "rocketchat_message_mention"
 			for _, mentionData := range mentionsAry {
 				// map[id:XYZ name:RJ username:rjones]
 				name, _ := mentionData["name"].(string)
 				username, _ := mentionData["username"].(string)
-				name, username = shared.PostprocessNameUsername(name, username, "")
-				userUUID := shared.UUIDAffs(ctx, source, "", name, username)
-				identity = &models.Identity{
-					ID:           userUUID,
-					DataSourceID: source,
-					Name:         name,
-					Username:     username,
+				userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+				if err != nil {
+					shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+					return
 				}
-				mentionUUID := shared.UUIDNonEmpty(ctx, docUUID, "mention", userUUID)
-				activity := &models.MessageActivity{
-					ID:              mentionUUID,
-					ActivityType:    mentionType,
-					CreatedAt:       strfmt.DateTime(actDt),
-					MessageKey:      docUUID,
-					MessageID:       messageID,
-					ParentKey:       parentID,
-					ParentMessageID: parentIID,
-					Identity:        identity,
+				contributor := insights.Contributor{
+					Role:   "mention-author",
+					Weight: 1.0,
+					Identity: user.UserIdentityObjectBase{
+						ID:         userUUID,
+						IsVerified: false,
+						Name:       name,
+						Username:   username,
+						Source:     source,
+					},
 				}
-				activities = append(activities, activity)
+				contributors = append(contributors, contributor)
 			}
 		}
-		// Event
-		event := &models.Event{
-			Message: &models.Message{
-				ID:           docUUID,
-				MessageID:    messageID,
-				Type:         msgType,
-				DataSourceID: source,
-				URLs:         urls,
-				CreatedAt:    strfmt.DateTime(createdOn),
-				Activities:   activities,
-				Channel: &models.Channel{
-					ID:           chanUUID,
-					ChannelID:    chanIID,
-					CreatedAt:    strfmt.DateTime(chanCreatedAt),
-					UpdatedAt:    strfmt.DateTime(chanUpdatedAt),
-					Slug:         endpoint,
-					MessageCount: int64(chanMsgs),
-					MemberCount:  int64(chanUsers),
-					Name:         chanName,
-					Topic:        chanTopic,
-				},
-			},
+
+		messageUUID, err = rocketchat.GenerateRocketChatMessageID(chanUUID, messageID)
+		if err != nil {
+			shared.Printf("GenerateRocketChatMessageID(%s,%s): %+v for %+v\n", chanUUID, messageID, err, doc)
+			return
 		}
-		data.Events = append(data.Events, event)
+
+		message := rocketchat.Message{
+			ID:              messageUUID,
+			ChannelID:       chanUUID,
+			SourceID:        messageID,
+			Contributors:    contributors,
+			URLs:            urls,
+			Attachments:     attachments,
+			SyncTimestamp:   time.Now(),
+			SourceTimestamp: updatedOn,
+		}
+
+		payload := map[string]interface{}{
+			"channel": channel,
+			"message": message,
+		}
+
+		ary, ok := data[key]
+		if !ok {
+			ary = []interface{}{payload}
+		} else {
+			ary = append(ary, payload)
+		}
+		data[key] = ary
+
 		gMaxUpstreamDtMtx.Lock()
 		if updatedOn.After(gMaxUpstreamDt) {
 			gMaxUpstreamDt = updatedOn
@@ -793,14 +914,46 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 		if len(*docs) > 0 {
 			// actual output
 			shared.Printf("output processing(%d/%d/%v)\n", len(items), len(*docs), final)
-			data := j.GetModelData(ctx, *docs)
-			// FIXME: actual output to some consumer...
-			jsonBytes, err := jsoniter.Marshal(data)
+			var (
+				data      map[string][]interface{}
+				jsonBytes []byte
+				err       error
+			)
+			data, err = j.GetModelData(ctx, *docs)
+			if err == nil {
+				// shared.Printf("Error: %+v\n", err)
+				// return
+				if j.Publisher != nil {
+					insightsStr := "insights"
+					messageStr := "messages"
+					envStr := os.Getenv("STAGE")
+					for k, v := range data {
+						switch k {
+						case "created":
+							ev, _ := v[0].(rocketchat.MessageCreatedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "edited":
+							ev, _ := v[0].(rocketchat.MessageEditedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						default:
+							err = fmt.Errorf("unknown event type '%s'", k)
+						}
+						if err != nil {
+							break
+						}
+					}
+				} else {
+					jsonBytes, err = jsoniter.Marshal(data)
+				}
+			}
 			if err != nil {
 				shared.Printf("Error: %+v\n", err)
 				return
 			}
-			shared.Printf("%s\n", string(jsonBytes))
+			if j.Publisher == nil {
+				shared.Printf("%s\n", string(jsonBytes))
+			}
+
 			*docs = []interface{}{}
 			gMaxUpstreamDtMtx.Lock()
 			defer gMaxUpstreamDtMtx.Unlock()
