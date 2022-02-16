@@ -136,7 +136,7 @@ func (j *DSRocketchat) AddFlags() {
 	j.FlagMaxItems = flag.Int("rocketchat-max-items", RocketchatDefaultMaxItems, "max items to retrieve from API via a single request - defaults to 100")
 	j.FlagMinRate = flag.Int("rocketchat-min-rate", RocketchatDefaultMinRate, "min API points, if we reach this value we wait for refresh, default 10")
 	j.FlagWaitRate = flag.Bool("rocketchat-wait-rate", false, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached")
-	j.FlagStream = flag.String("rocketchat-stream", RocketChatDefaultStream, "gerrit kinesis stream name, for example PUT-S3-gerrit")
+	j.FlagStream = flag.String("rocketchat-stream", RocketChatDefaultStream, "rocketchat kinesis stream name, for example PUT-S3-gerrit")
 }
 
 // ParseArgs - parse rocketchat specific environment variables
