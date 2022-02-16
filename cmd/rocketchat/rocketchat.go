@@ -54,6 +54,9 @@ var (
 	RocketChatConnector = "rocketchat-connector"
 	// RocketChatDatasource ...
 	RocketChatDatasource = "rochetchat"
+
+	// RocketChatDefaultStream - Default stream to publish
+	RocketChatDefaultStream = "PUT-S3-rocketchat"
 )
 
 type Publisher interface {
@@ -76,6 +79,7 @@ type DSRocketchat struct {
 	FlagMaxItems *int
 	FlagMinRate  *int
 	FlagWaitRate *bool
+	FlagStream   *string
 	// Publisher & stream
 	Publisher
 	Stream string // stream to publish the data
@@ -132,6 +136,7 @@ func (j *DSRocketchat) AddFlags() {
 	j.FlagMaxItems = flag.Int("rocketchat-max-items", RocketchatDefaultMaxItems, "max items to retrieve from API via a single request - defaults to 100")
 	j.FlagMinRate = flag.Int("rocketchat-min-rate", RocketchatDefaultMinRate, "min API points, if we reach this value we wait for refresh, default 10")
 	j.FlagWaitRate = flag.Bool("rocketchat-wait-rate", false, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached")
+	j.FlagStream = flag.String("rocketchat-stream", RocketChatDefaultStream, "rocketchat kinesis stream name, for example PUT-S3-rocketchat")
 }
 
 // ParseArgs - parse rocketchat specific environment variables
@@ -219,6 +224,16 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 	if present {
 		j.WaitRate = waitRate
 	}
+
+	//  rocketchat stream
+	j.Stream = RocketChatDefaultStream
+	if shared.FlagPassed(ctx, "stream") {
+		j.Stream = *j.FlagStream
+	}
+	if ctx.EnvSet("STREAM") {
+		j.Stream = ctx.Env("STREAM")
+	}
+
 	return
 }
 
@@ -883,18 +898,33 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			SourceTimestamp: updatedOn,
 		}
 
-		payload := map[string]interface{}{
-			"channel": channel,
-			"message": message,
-		}
+		if key == "created" {
+			payload := rocketchat.CreateMessage{
+				Message: message,
+				Channel: channel,
+			}
 
-		ary, ok := data[key]
-		if !ok {
-			ary = []interface{}{payload}
-		} else {
-			ary = append(ary, payload)
+			ary, ok := data[key]
+			if !ok {
+				ary = []interface{}{payload}
+			} else {
+				ary = append(ary, payload)
+			}
+			data[key] = ary
+		} else if key == "edited" {
+			payload := rocketchat.EditedMessage{
+				Message: message,
+				Channel: channel,
+			}
+
+			ary, ok := data[key]
+			if !ok {
+				ary = []interface{}{payload}
+			} else {
+				ary = append(ary, payload)
+			}
+			data[key] = ary
 		}
-		data[key] = ary
 
 		gMaxUpstreamDtMtx.Lock()
 		if updatedOn.After(gMaxUpstreamDt) {
