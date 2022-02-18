@@ -59,6 +59,7 @@ var (
 	RocketChatDefaultStream = "PUT-S3-rocketchat"
 )
 
+// Publisher - publish events
 type Publisher interface {
 	PushEvents(action, source, eventType, subEventType, env string, data []interface{}) error
 }
@@ -642,7 +643,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 	return
 }
 
-// GetModelData - return data in swagger format
+// GetModelData - return data in lfx-event-schema format
 func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data map[string][]interface{}, err error) {
 	data = make(map[string][]interface{})
 	defer func() {
