@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/go:1.17.7
+      - image: circleci/golang:1.17
     working_directory: /go/src/github.com/LF-Engineering/insights-connector-rocketchat
     steps:
       - checkout
