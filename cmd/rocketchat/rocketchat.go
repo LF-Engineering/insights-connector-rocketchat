@@ -59,6 +59,7 @@ var (
 	RocketChatDefaultStream = "PUT-S3-rocketchat"
 )
 
+// Publisher - publish events
 type Publisher interface {
 	PushEvents(action, source, eventType, subEventType, env string, data []interface{}) error
 }
