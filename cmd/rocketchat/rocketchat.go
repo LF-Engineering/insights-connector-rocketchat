@@ -31,6 +31,8 @@ import (
 const (
 	// RocketchatBackendVersion - backend version
 	RocketchatBackendVersion = "0.1.0"
+	// RocketchatDataSource - data source name
+	RocketchatDataSource = "rocketchat"
 )
 
 var (
@@ -112,18 +114,17 @@ func (j *DSRocketchat) AddLogger(ctx *shared.Ctx) {
 }
 
 // WriteLog - writes to log
-func (j *DSRocketchat) WriteLog(ctx *shared.Ctx, status, message string) {
+func (j *DSRocketchat) WriteLog(ctx *shared.Ctx, timestamp time.Time, status, message string) {
 	_ = j.Logger.Write(&logger.Log{
-		Connector: RocketChatDatasource,
+		Connector: RocketchatDataSource,
 		Configuration: []map[string]string{
 			{
-				"CONFLUENCE_URL": j.URL,
-				"ES_URL":         ctx.ESURL,
-				"ProjectSlug":    ctx.Project,
+				"ROCKETCHAT_URL":     j.URL,
+				"ROCKETCHAT_CHANNEL": j.Channel,
+				"ProjectSlug":        ctx.Project,
 			}},
 		Status:    status,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: timestamp,
 		Message:   message,
 	})
 }
@@ -650,16 +651,19 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		if err != nil {
 			return
 		}
-
 		messageBaseEvent := rocketchat.MessageBaseEvent{
 			Connector:        insights.RocketChatConnector,
 			ConnectorVersion: RocketchatBackendVersion,
 			Source:           insights.RocketChatSource,
 		}
-
+		messageReactionBaseEvent := rocketchat.MessageReactionBaseEvent{
+			Connector:        insights.RocketChatConnector,
+			ConnectorVersion: RocketchatBackendVersion,
+			Source:           insights.RocketChatSource,
+		}
 		for k, v := range data {
 			switch k {
-			case "created":
+			case "message_created":
 				baseEvent := service.BaseEvent{
 					Type: service.EventType(rocketchat.MessageCreatedEvent{}.Event()),
 					CRUDInfo: service.CRUDInfo{
@@ -669,7 +673,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						UpdatedAt: time.Now().Unix(),
 					},
 				}
-
 				ary := []interface{}{}
 				for _, content := range v {
 					ary = append(ary, rocketchat.MessageCreatedEvent{
@@ -679,8 +682,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					})
 				}
 				data[k] = ary
-
-			case "edited":
+			case "message_edited":
 				baseEvent := service.BaseEvent{
 					Type: service.EventType(rocketchat.MessageEditedEvent{}.Event()),
 					CRUDInfo: service.CRUDInfo{
@@ -690,7 +692,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						UpdatedAt: time.Now().Unix(),
 					},
 				}
-
 				ary := []interface{}{}
 				for _, content := range v {
 					ary = append(ary, rocketchat.MessageEditedEvent{
@@ -700,28 +701,42 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					})
 				}
 				data[k] = ary
-
+			case "message_reaction_created":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.MessageReactionCreatedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+				ary := []interface{}{}
+				for _, reaction := range v {
+					ary = append(ary, rocketchat.MessageReactionCreatedEvent{
+						MessageReactionBaseEvent: messageReactionBaseEvent,
+						BaseEvent:                baseEvent,
+						Payload:                  reaction.(rocketchat.CreateMessageReaction),
+					})
+				}
+				data[k] = ary
 			default:
-				err = fmt.Errorf("unknown message '%s' event", k)
+				err = fmt.Errorf("unknown message/reaction '%s' event", k)
 				return
 			}
-
 		}
-
 	}()
-
 	endpoint := j.Endpoint()
 	attachments := make([]string, 0)
 	key := ""
-	userUUID, chanUUID, messageUUID := "", "", ""
+	userID, chanID, messageID, messageReactionID := "", "", "", ""
 	source := RocketChatDatasource
 	for _, iDoc := range docs {
 		contributors := make([]insights.Contributor, 0)
-		var (
-			urls []string
-		)
+		var urls []string
 		doc, _ := iDoc.(map[string]interface{})
-		messageID, _ := doc["msg_id"].(string)
+		sourceMessageID, _ := doc["msg_id"].(string)
+		body, _ := doc["msg"].(string)
 		urls, _ = doc["message_urls"].([]string)
 		fileName, fileOK := doc["file_name"].(string)
 		if fileOK {
@@ -729,7 +744,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		}
 		isEdited, _ := doc["is_edited"].(bool)
 		if isEdited {
-			key = "edited"
+			key = "message_edited"
 			name, _ := doc["edited_by_name"].(string)
 			// We can consider using 'edited_by_user_id' if name is empty
 			username, _ := doc["edited_by_username"].(string)
@@ -738,7 +753,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				name, _ = doc["user_name"].(string)
 				username, _ = doc["user_username"].(string)
 			}
-			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+			userID, err = user.GenerateIdentity(&source, nil, &name, &username)
 			if err != nil {
 				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
 				return
@@ -747,7 +762,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				Role:   insights.AuthorRole,
 				Weight: 1.0,
 				Identity: user.UserIdentityObjectBase{
-					ID:         userUUID,
+					ID:         userID,
 					IsVerified: false,
 					Name:       name,
 					Username:   username,
@@ -756,11 +771,11 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			}
 			contributors = append(contributors, contributor)
 		} else {
-			key = "created"
+			key = "message_created"
 			name, _ := doc["user_name"].(string)
 			// We can consider using 'user_id' if name is empty
 			username, _ := doc["user_username"].(string)
-			userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+			userID, err = user.GenerateIdentity(&source, nil, &name, &username)
 			if err != nil {
 				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
 				return
@@ -769,7 +784,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				Role:   insights.AuthorRole,
 				Weight: 1.0,
 				Identity: user.UserIdentityObjectBase{
-					ID:         userUUID,
+					ID:         userID,
 					IsVerified: false,
 					Name:       name,
 					Username:   username,
@@ -778,21 +793,20 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			}
 			contributors = append(contributors, contributor)
 		}
-
 		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added, rocketchat_attachment_edited
 		chanIID, _ := doc["channel_id"].(string)
 		chanName, _ := doc["channel_name"].(string)
 		chanTopic, _ := doc["channel_topic"].(string)
 		chanUsers, _ := doc["channel_num_users"].(float64)
 		updatedOn, _ := doc["updated_at"].(time.Time)
-		chanUUID, err = rocketchat.GenerateRocketChatChannelID(endpoint, chanIID)
+		chanID, err = rocketchat.GenerateRocketChatChannelID(endpoint, chanIID)
 		if err != nil {
 			shared.Printf("GenerateRocketChatChannelID(%s,%s): %+v for %+v\n", endpoint, chanIID, err, doc)
 			return
 		}
 		actDt := updatedOn
 		channel := rocketchat.Channel{
-			ID:              chanUUID,
+			ID:              chanID,
 			SourceID:        chanIID,
 			Domain:          endpoint,
 			MemberCount:     int(chanUsers),
@@ -807,13 +821,18 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				actDt = editedOn
 			}
 		}
-
+		messageID, err = rocketchat.GenerateRocketChatMessageID(chanID, sourceMessageID)
+		if err != nil {
+			shared.Printf("GenerateRocketChatMessageID(%s,%s): %+v for %+v\n", chanID, messageID, err, doc)
+			return
+		}
 		// Reactions
 		reactionsAry, okReactions := doc["reactions"].([]map[string]interface{})
 		if okReactions {
 			for _, reactionData := range reactionsAry {
 				// map[count:1 emoji:UNICODE names:[] type::handshake: usernames:[rjones]]
-				emoji, _ := reactionData["emoji"].(string)
+				emojiType, _ := reactionData["type"].(string)
+				emojiContent, _ := reactionData["emoji"].(string)
 				names, _ := reactionData["names"].([]interface{})
 				usernames, _ := reactionData["usernames"].([]interface{})
 				l1 := len(names)
@@ -834,8 +853,8 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					if desc != "" && username != "" {
 						desc += " "
 					}
-					desc += username + " reacted with " + emoji
-					userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+					desc += username + " reacted with " + emojiContent
+					userID, err = user.GenerateIdentity(&source, nil, &name, &username)
 					if err != nil {
 						shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
 						return
@@ -844,7 +863,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						Role:   insights.ReactionAuthorRole,
 						Weight: 1.0,
 						Identity: user.UserIdentityObjectBase{
-							ID:         userUUID,
+							ID:         userID,
 							IsVerified: false,
 							Name:       name,
 							Username:   username,
@@ -852,6 +871,35 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						},
 					}
 					contributors = append(contributors, contributor)
+					// Reaction event
+					reactionSID := messageID + ":" + emojiContent
+					messageReactionID, err = rocketchat.GenerateRocketChatMessageReactionID(messageID, userID, emojiType)
+					if err != nil {
+						shared.Printf("GenerateRocketChatMessageReactionID(%s,%s,%s): %+v for %+v\n", messageID, userID, emojiType, err, doc)
+						return
+					}
+					messageReaction := rocketchat.CreateMessageReaction{
+						ID:        messageReactionID,
+						MessageID: messageID,
+						Reaction: insights.Reaction{
+							Emoji: service.Emoji{
+								ID:      emojiType,
+								Unicode: emojiContent,
+							},
+							ReactionID:      reactionSID,
+							SourceTimestamp: actDt,
+							SyncTimestamp:   time.Now(),
+							Contributor:     contributor,
+						},
+					}
+					key := "message_reaction_created"
+					ary, ok := data[key]
+					if !ok {
+						ary = []interface{}{messageReaction}
+					} else {
+						ary = append(ary, messageReaction)
+					}
+					data[key] = ary
 				}
 			}
 		}
@@ -862,16 +910,16 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				// map[id:XYZ name:RJ username:rjones]
 				name, _ := mentionData["name"].(string)
 				username, _ := mentionData["username"].(string)
-				userUUID, err = user.GenerateIdentity(&source, nil, &name, &username)
+				userID, err = user.GenerateIdentity(&source, nil, &name, &username)
 				if err != nil {
 					shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
 					return
 				}
 				contributor := insights.Contributor{
-					Role:   "mention-author",
+					Role:   insights.MentionAuthorRole,
 					Weight: 1.0,
 					Identity: user.UserIdentityObjectBase{
-						ID:         userUUID,
+						ID:         userID,
 						IsVerified: false,
 						Name:       name,
 						Username:   username,
@@ -881,30 +929,22 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				contributors = append(contributors, contributor)
 			}
 		}
-
-		messageUUID, err = rocketchat.GenerateRocketChatMessageID(chanUUID, messageID)
-		if err != nil {
-			shared.Printf("GenerateRocketChatMessageID(%s,%s): %+v for %+v\n", chanUUID, messageID, err, doc)
-			return
-		}
-
 		message := rocketchat.Message{
-			ID:              messageUUID,
-			ChannelID:       chanUUID,
-			SourceID:        messageID,
+			ID:              messageID,
+			ChannelID:       chanID,
+			SourceID:        sourceMessageID,
+			Body:            body,
 			Contributors:    shared.DedupContributors(contributors),
 			URLs:            urls,
 			Attachments:     attachments,
 			SyncTimestamp:   time.Now(),
 			SourceTimestamp: updatedOn,
 		}
-
-		if key == "created" {
+		if key == "message_created" {
 			payload := rocketchat.CreateMessage{
 				Message: message,
 				Channel: channel,
 			}
-
 			ary, ok := data[key]
 			if !ok {
 				ary = []interface{}{payload}
@@ -912,12 +952,11 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				ary = append(ary, payload)
 			}
 			data[key] = ary
-		} else if key == "edited" {
+		} else if key == "message_edited" {
 			payload := rocketchat.EditedMessage{
 				Message: message,
 				Channel: channel,
 			}
-
 			ary, ok := data[key]
 			if !ok {
 				ary = []interface{}{payload}
@@ -926,7 +965,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			}
 			data[key] = ary
 		}
-
 		gMaxUpstreamDtMtx.Lock()
 		if updatedOn.After(gMaxUpstreamDt) {
 			gMaxUpstreamDt = updatedOn
@@ -960,11 +998,14 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 					envStr := os.Getenv("STAGE")
 					for k, v := range data {
 						switch k {
-						case "created":
+						case "message_created":
 							ev, _ := v[0].(rocketchat.MessageCreatedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
-						case "edited":
+						case "message_edited":
 							ev, _ := v[0].(rocketchat.MessageEditedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "message_reaction_created":
+							ev, _ := v[0].(rocketchat.MessageReactionCreatedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						default:
 							err = fmt.Errorf("unknown event type '%s'", k)
@@ -1079,7 +1120,7 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 	return
 }
 
-// GetRocketchatMessages - get confluence historical contents
+// GetRocketchatMessages - get rocketchat historical contents
 func (j *DSRocketchat) GetRocketchatMessages(ctx *shared.Ctx, fromDate, toDate string, offset, rateLimit, rateLimitReset, thrN int) (messages []map[string]interface{}, newOffset, total, outRateLimit, outRateLimitReset int, err error) {
 	// Without dateTo
 	// query := `{"_updatedAt": {"$gte": {"$date": "` + fromDate + `"}}}`
@@ -1431,15 +1472,13 @@ func main() {
 		shared.Printf("Error: %+v\n", err)
 		return
 	}
+	timestamp := time.Now()
+	rocketchat.WriteLog(&ctx, timestamp, logger.InProgress, "")
 	err = rocketchat.Sync(&ctx)
 	if err != nil {
 		shared.Printf("Error: %+v\n", err)
+		rocketchat.WriteLog(&ctx, timestamp, logger.Failed, err.Error())
 		return
 	}
-	/*
-		jsonBytes, _ := jsoniter.Marshal(gRa)
-		fmt.Printf("gRa: {\"all\":%s}\n", string(jsonBytes))
-		jsonBytes, _ = jsoniter.Marshal(gRi)
-		fmt.Printf("gRi: {\"all\":%s}\n", string(jsonBytes))
-	*/
+	rocketchat.WriteLog(&ctx, timestamp, logger.Done, "")
 }
