@@ -892,7 +892,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			ID:              messageUUID,
 			ChannelID:       chanUUID,
 			SourceID:        messageID,
-			Contributors:    contributors,
+			Contributors:    shared.DedupContributors(contributors),
 			URLs:            urls,
 			Attachments:     attachments,
 			SyncTimestamp:   time.Now(),
