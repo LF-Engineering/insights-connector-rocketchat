@@ -799,8 +799,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		chanTopic, _ := doc["channel_topic"].(string)
 		chanUsers, _ := doc["channel_num_users"].(float64)
 		updatedOn, _ := doc["updated_at"].(time.Time)
-		// xxx
-		fmt.Printf("doc=%+v\n", shared.PrettyPrint(doc))
 		chanID, err = rocketchat.GenerateRocketChatChannelID(endpoint, chanIID)
 		if err != nil {
 			shared.Printf("GenerateRocketChatChannelID(%s,%s): %+v for %+v\n", endpoint, chanIID, err, doc)
@@ -833,8 +831,6 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		if okReactions {
 			for _, reactionData := range reactionsAry {
 				// map[count:1 emoji:UNICODE names:[] type::handshake: usernames:[rjones]]
-				// xxx
-				fmt.Printf("reaction=%+v\n", shared.PrettyPrint(reactionData))
 				emojiType, _ := reactionData["type"].(string)
 				emojiContent, _ := reactionData["emoji"].(string)
 				names, _ := reactionData["names"].([]interface{})
