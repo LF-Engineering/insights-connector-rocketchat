@@ -144,6 +144,10 @@ func (j *DSRocketchat) AddFlags() {
 // ParseArgs - parse rocketchat specific environment variables
 func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 	encrypt, err := cryptography.NewEncryptionClient()
+	if err != nil {
+		return err
+	}
+
 	// RocketChat Server URL
 	if shared.FlagPassed(ctx, "url") && *j.FlagURL != "" {
 		j.URL = *j.FlagURL
