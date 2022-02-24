@@ -543,6 +543,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		err = fmt.Errorf("missing data field in item %+v", shared.DumpKeys(item))
 		return
 	}
+	// shared.Printf("raw = %s\n", shared.PrettyPrint(message))
 	rich["msg"], _ = message["msg"]
 	rich["t"], _ = message["t"]
 	rich["role"], _ = message["role"]
@@ -650,6 +651,19 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 	return
 }
 
+func (j *DSRocketchat) mapRoleType(role string) insights.Role {
+	switch role {
+	case "owner":
+		return insights.OwnerRole
+	case "author":
+		return insights.OwnerRole
+	default:
+		fmt.Printf("WARNING: unknown role '%s'\n", role)
+	}
+	// return insights.AuthorRole
+	return insights.Role(role)
+}
+
 // GetModelData - return data in lfx-event-schema format
 func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data map[string][]interface{}, err error) {
 	data = make(map[string][]interface{})
@@ -663,6 +677,16 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			Source:           insights.RocketChatSource,
 		}
 		messageReactionBaseEvent := rocketchat.MessageReactionBaseEvent{
+			Connector:        insights.RocketChatConnector,
+			ConnectorVersion: RocketchatBackendVersion,
+			Source:           insights.RocketChatSource,
+		}
+		eventBaseEvent := rocketchat.EventBaseEvent{
+			Connector:        insights.RocketChatConnector,
+			ConnectorVersion: RocketchatBackendVersion,
+			Source:           insights.RocketChatSource,
+		}
+		eventReactionBaseEvent := rocketchat.EventReactionBaseEvent{
 			Connector:        insights.RocketChatConnector,
 			ConnectorVersion: RocketchatBackendVersion,
 			Source:           insights.RocketChatSource,
@@ -726,6 +750,44 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					})
 				}
 				data[k] = ary
+			case "event_created":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.EventCreatedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+				ary := []interface{}{}
+				for _, event := range v {
+					ary = append(ary, rocketchat.EventCreatedEvent{
+						EventBaseEvent: eventBaseEvent,
+						BaseEvent:      baseEvent,
+						Payload:        event.(rocketchat.CreateEvent),
+					})
+				}
+				data[k] = ary
+			case "event_reaction_created":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.EventReactionCreatedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+				ary := []interface{}{}
+				for _, reaction := range v {
+					ary = append(ary, rocketchat.EventReactionCreatedEvent{
+						EventReactionBaseEvent: eventReactionBaseEvent,
+						BaseEvent:              baseEvent,
+						Payload:                reaction.(rocketchat.CreateEventReaction),
+					})
+				}
+				data[k] = ary
 			default:
 				err = fmt.Errorf("unknown message/reaction '%s' event", k)
 				return
@@ -735,77 +797,20 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 	endpoint := j.Endpoint()
 	attachments := make([]string, 0)
 	key := ""
-	userID, chanID, messageID, messageReactionID := "", "", "", ""
+	userID, chanID, messageID, eventID, messageReactionID, eventReactionID := "", "", "", "", "", ""
 	source := RocketChatDatasource
 	for _, iDoc := range docs {
 		contributors := make([]insights.Contributor, 0)
 		var urls []string
 		doc, _ := iDoc.(map[string]interface{})
+		// shared.Printf("doc = %s\n", shared.PrettyPrint(doc))
 		sourceMessageID, _ := doc["msg_id"].(string)
 		body, _ := doc["msg"].(string)
-		// If "t" is non-empty - it means that it is a Rocketchat event, not a message.
-		t, _ := doc["t"].(string)
-		if t != "" {
-			continue
-		}
-		// role, _ := doc["role"].(string)
 		urls, _ = doc["message_urls"].([]string)
 		fileName, fileOK := doc["file_name"].(string)
 		if fileOK {
 			attachments = append(attachments, fileName)
 		}
-		isEdited, _ := doc["is_edited"].(bool)
-		if isEdited {
-			key = "message_edited"
-			name, _ := doc["edited_by_name"].(string)
-			// We can consider using 'edited_by_user_id' if name is empty
-			username, _ := doc["edited_by_username"].(string)
-			// Fallback
-			if name == "" && username == "" {
-				name, _ = doc["user_name"].(string)
-				username, _ = doc["user_username"].(string)
-			}
-			userID, err = user.GenerateIdentity(&source, nil, &name, &username)
-			if err != nil {
-				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
-				return
-			}
-			contributor := insights.Contributor{
-				Role:   insights.AuthorRole,
-				Weight: 1.0,
-				Identity: user.UserIdentityObjectBase{
-					ID:         userID,
-					IsVerified: false,
-					Name:       name,
-					Username:   username,
-					Source:     source,
-				},
-			}
-			contributors = append(contributors, contributor)
-		} else {
-			key = "message_created"
-			name, _ := doc["user_name"].(string)
-			// We can consider using 'user_id' if name is empty
-			username, _ := doc["user_username"].(string)
-			userID, err = user.GenerateIdentity(&source, nil, &name, &username)
-			if err != nil {
-				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
-				return
-			}
-			contributor := insights.Contributor{
-				Role:   insights.AuthorRole,
-				Weight: 1.0,
-				Identity: user.UserIdentityObjectBase{
-					ID:         userID,
-					IsVerified: false,
-					Name:       name,
-					Username:   username,
-					Source:     source,
-				},
-			}
-			contributors = append(contributors, contributor)
-		}
-		// activity type: rocketchat_message_created, rocketchat_message_edited, rocketchat_message_reaction, rocketchat_message_mention, rocketchat_attachment_added, rocketchat_attachment_edited
 		chanIID, _ := doc["channel_id"].(string)
 		chanName, _ := doc["channel_name"].(string)
 		chanTopic, _ := doc["channel_topic"].(string)
@@ -827,16 +832,106 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 			SyncTimestamp:   time.Now(),
 			SourceTimestamp: actDt,
 		}
+		isEdited, _ := doc["is_edited"].(bool)
 		if isEdited {
 			editedOn, okEdited := doc["edited_at"].(time.Time)
 			if okEdited {
 				actDt = editedOn
 			}
 		}
-		messageID, err = rocketchat.GenerateRocketChatMessageID(chanID, sourceMessageID)
-		if err != nil {
-			shared.Printf("GenerateRocketChatMessageID(%s,%s): %+v for %+v\n", chanID, messageID, err, doc)
-			return
+		// If "t" is non-empty - it means that it is a Rocketchat event, not a message.
+		tData, _ := doc["t"].(string)
+		isEvent := tData != ""
+		if isEvent {
+			// event (not a message)
+			roleType, _ := doc["role"].(string)
+			roleValue := insights.AuthorRole
+			if roleType != "" {
+				roleValue = j.mapRoleType(roleType)
+			}
+			key = "event_created"
+			name, _ := doc["user_name"].(string)
+			// We can consider using 'user_id' if name is empty
+			username, _ := doc["user_username"].(string)
+			userID, err = user.GenerateIdentity(&source, nil, &name, &username)
+			if err != nil {
+				shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+				return
+			}
+			contributor := insights.Contributor{
+				Role:   roleValue,
+				Weight: 1.0,
+				Identity: user.UserIdentityObjectBase{
+					ID:         userID,
+					IsVerified: false,
+					Name:       name,
+					Username:   username,
+					Source:     source,
+				},
+			}
+			contributors = append(contributors, contributor)
+			eventID, err = rocketchat.GenerateRocketChatEventID(chanID, sourceMessageID)
+			if err != nil {
+				shared.Printf("GenerateRocketChatEventID(%s,%s): %+v for %+v\n", chanID, eventID, err, doc)
+				return
+			}
+		} else {
+			// message (not an event)
+			if isEdited {
+				key = "message_edited"
+				name, _ := doc["edited_by_name"].(string)
+				// We can consider using 'edited_by_user_id' if name is empty
+				username, _ := doc["edited_by_username"].(string)
+				// Fallback
+				if name == "" && username == "" {
+					name, _ = doc["user_name"].(string)
+					username, _ = doc["user_username"].(string)
+				}
+				userID, err = user.GenerateIdentity(&source, nil, &name, &username)
+				if err != nil {
+					shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+					return
+				}
+				contributor := insights.Contributor{
+					Role:   insights.AuthorRole,
+					Weight: 1.0,
+					Identity: user.UserIdentityObjectBase{
+						ID:         userID,
+						IsVerified: false,
+						Name:       name,
+						Username:   username,
+						Source:     source,
+					},
+				}
+				contributors = append(contributors, contributor)
+			} else {
+				key = "message_created"
+				name, _ := doc["user_name"].(string)
+				// We can consider using 'user_id' if name is empty
+				username, _ := doc["user_username"].(string)
+				userID, err = user.GenerateIdentity(&source, nil, &name, &username)
+				if err != nil {
+					shared.Printf("GenerateIdentity(%s,%s,%s): %+v for %+v\n", source, name, username, err, doc)
+					return
+				}
+				contributor := insights.Contributor{
+					Role:   insights.AuthorRole,
+					Weight: 1.0,
+					Identity: user.UserIdentityObjectBase{
+						ID:         userID,
+						IsVerified: false,
+						Name:       name,
+						Username:   username,
+						Source:     source,
+					},
+				}
+				contributors = append(contributors, contributor)
+			}
+			messageID, err = rocketchat.GenerateRocketChatMessageID(chanID, sourceMessageID)
+			if err != nil {
+				shared.Printf("GenerateRocketChatMessageID(%s,%s): %+v for %+v\n", chanID, messageID, err, doc)
+				return
+			}
 		}
 		// Reactions
 		reactionsAry, okReactions := doc["reactions"].([]map[string]interface{})
@@ -884,34 +979,65 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					}
 					contributors = append(contributors, contributor)
 					// Reaction event
-					reactionSID := messageID + ":" + emojiContent
-					messageReactionID, err = rocketchat.GenerateRocketChatMessageReactionID(messageID, userID, emojiType)
-					if err != nil {
-						shared.Printf("GenerateRocketChatMessageReactionID(%s,%s,%s): %+v for %+v\n", messageID, userID, emojiType, err, doc)
-						return
-					}
-					messageReaction := rocketchat.CreateMessageReaction{
-						ID:        messageReactionID,
-						MessageID: messageID,
-						Reaction: insights.Reaction{
-							Emoji: service.Emoji{
-								ID:      emojiType,
-								Unicode: emojiContent,
+					if isEvent {
+						reactionSID := eventID + ":" + emojiContent
+						eventReactionID, err = rocketchat.GenerateRocketChatEventReactionID(eventID, userID, emojiType)
+						if err != nil {
+							shared.Printf("GenerateRocketChatEventReactionID(%s,%s,%s): %+v for %+v\n", eventID, userID, emojiType, err, doc)
+							return
+						}
+						eventReaction := rocketchat.CreateEventReaction{
+							ID:      eventReactionID,
+							EventID: eventID,
+							Reaction: insights.Reaction{
+								Emoji: service.Emoji{
+									ID:      emojiType,
+									Unicode: emojiContent,
+								},
+								ReactionID:      reactionSID,
+								SourceTimestamp: actDt,
+								SyncTimestamp:   time.Now(),
+								Contributor:     contributor,
 							},
-							ReactionID:      reactionSID,
-							SourceTimestamp: actDt,
-							SyncTimestamp:   time.Now(),
-							Contributor:     contributor,
-						},
-					}
-					key := "message_reaction_created"
-					ary, ok := data[key]
-					if !ok {
-						ary = []interface{}{messageReaction}
+						}
+						rkey := "event_reaction_created"
+						ary, ok := data[rkey]
+						if !ok {
+							ary = []interface{}{eventReaction}
+						} else {
+							ary = append(ary, eventReaction)
+						}
+						data[rkey] = ary
 					} else {
-						ary = append(ary, messageReaction)
+						reactionSID := messageID + ":" + emojiContent
+						messageReactionID, err = rocketchat.GenerateRocketChatMessageReactionID(messageID, userID, emojiType)
+						if err != nil {
+							shared.Printf("GenerateRocketChatMessageReactionID(%s,%s,%s): %+v for %+v\n", messageID, userID, emojiType, err, doc)
+							return
+						}
+						messageReaction := rocketchat.CreateMessageReaction{
+							ID:        messageReactionID,
+							MessageID: messageID,
+							Reaction: insights.Reaction{
+								Emoji: service.Emoji{
+									ID:      emojiType,
+									Unicode: emojiContent,
+								},
+								ReactionID:      reactionSID,
+								SourceTimestamp: actDt,
+								SyncTimestamp:   time.Now(),
+								Contributor:     contributor,
+							},
+						}
+						rkey := "message_reaction_created"
+						ary, ok := data[rkey]
+						if !ok {
+							ary = []interface{}{messageReaction}
+						} else {
+							ary = append(ary, messageReaction)
+						}
+						data[rkey] = ary
 					}
-					data[key] = ary
 				}
 			}
 		}
@@ -941,20 +1067,21 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				contributors = append(contributors, contributor)
 			}
 		}
-		message := rocketchat.Message{
-			ID:              messageID,
-			ChannelID:       chanID,
-			SourceID:        sourceMessageID,
-			Body:            body,
-			Contributors:    shared.DedupContributors(contributors),
-			URLs:            urls,
-			Attachments:     attachments,
-			SyncTimestamp:   time.Now(),
-			SourceTimestamp: updatedOn,
-		}
-		if key == "message_created" {
-			payload := rocketchat.CreateMessage{
-				Message: message,
+		if isEvent {
+			event := rocketchat.Event{
+				ID:              eventID,
+				ChannelID:       chanID,
+				SourceID:        sourceMessageID,
+				UserName:        body,
+				Type:            tData,
+				Contributors:    shared.DedupContributors(contributors),
+				URLs:            urls,
+				Attachments:     attachments,
+				SyncTimestamp:   time.Now(),
+				SourceTimestamp: updatedOn,
+			}
+			payload := rocketchat.CreateEvent{
+				Event:   event,
 				Channel: channel,
 			}
 			ary, ok := data[key]
@@ -964,18 +1091,43 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				ary = append(ary, payload)
 			}
 			data[key] = ary
-		} else if key == "message_edited" {
-			payload := rocketchat.EditedMessage{
-				Message: message,
-				Channel: channel,
+		} else {
+			message := rocketchat.Message{
+				ID:              messageID,
+				ChannelID:       chanID,
+				SourceID:        sourceMessageID,
+				Body:            body,
+				Contributors:    shared.DedupContributors(contributors),
+				URLs:            urls,
+				Attachments:     attachments,
+				SyncTimestamp:   time.Now(),
+				SourceTimestamp: updatedOn,
 			}
-			ary, ok := data[key]
-			if !ok {
-				ary = []interface{}{payload}
-			} else {
-				ary = append(ary, payload)
+			if key == "message_created" {
+				payload := rocketchat.CreateMessage{
+					Message: message,
+					Channel: channel,
+				}
+				ary, ok := data[key]
+				if !ok {
+					ary = []interface{}{payload}
+				} else {
+					ary = append(ary, payload)
+				}
+				data[key] = ary
+			} else if key == "message_edited" {
+				payload := rocketchat.EditedMessage{
+					Message: message,
+					Channel: channel,
+				}
+				ary, ok := data[key]
+				if !ok {
+					ary = []interface{}{payload}
+				} else {
+					ary = append(ary, payload)
+				}
+				data[key] = ary
 			}
-			data[key] = ary
 		}
 		gMaxUpstreamDtMtx.Lock()
 		if updatedOn.After(gMaxUpstreamDt) {
@@ -1018,6 +1170,12 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						case "message_reaction_created":
 							ev, _ := v[0].(rocketchat.MessageReactionCreatedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "event_created":
+							ev, _ := v[0].(rocketchat.EventCreatedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "event_reaction_created":
+							ev, _ := v[0].(rocketchat.EventReactionCreatedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						default:
 							err = fmt.Errorf("unknown event type '%s'", k)
@@ -1485,6 +1643,7 @@ func main() {
 		return
 	}
 	timestamp := time.Now()
+	shared.AddLogger(&rocketchat.Logger, RocketchatDataSource, logger.Internal, []map[string]string{{"ROCKETCHAT_URL": rocketchat.URL, "ROCKETCHAT_CHANNEL": rocketchat.Channel, "ProjectSlug": ctx.Project}})
 	rocketchat.WriteLog(&ctx, timestamp, logger.InProgress, "")
 	err = rocketchat.Sync(&ctx)
 	if err != nil {
