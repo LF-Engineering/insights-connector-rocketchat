@@ -544,6 +544,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		return
 	}
 	rich["msg"], _ = message["msg"]
+	rich["t"], _ = message["t"]
 	rich["role"], _ = message["role"]
 	rich["rid"], _ = message["rid"]
 	rich["msg_id"], _ = message["_id"]
@@ -742,6 +743,11 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		doc, _ := iDoc.(map[string]interface{})
 		sourceMessageID, _ := doc["msg_id"].(string)
 		body, _ := doc["msg"].(string)
+		// If "t" is non-empty - it means that it is a Rocketchat event, not a message.
+		t, _ := doc["t"].(string)
+		if t != "" {
+			continue
+		}
 		// role, _ := doc["role"].(string)
 		urls, _ = doc["message_urls"].([]string)
 		fileName, fileOK := doc["file_name"].(string)
