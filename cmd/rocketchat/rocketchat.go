@@ -1095,7 +1095,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					return
 				}
 				contributor := insights.Contributor{
-					Role:   insights.MentionAuthorRole,
+					Role:   insights.MentionedRole,
 					Weight: 1.0,
 					Identity: user.UserIdentityObjectBase{
 						ID:         userID,
