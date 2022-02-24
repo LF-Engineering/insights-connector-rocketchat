@@ -543,6 +543,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 		err = fmt.Errorf("missing data field in item %+v", shared.DumpKeys(item))
 		return
 	}
+	// shared.Printf("raw = %s\n", shared.PrettyPrint(message))
 	rich["msg"], _ = message["msg"]
 	rich["t"], _ = message["t"]
 	rich["role"], _ = message["role"]
@@ -802,6 +803,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		contributors := make([]insights.Contributor, 0)
 		var urls []string
 		doc, _ := iDoc.(map[string]interface{})
+		// shared.Printf("doc = %s\n", shared.PrettyPrint(doc))
 		sourceMessageID, _ := doc["msg_id"].(string)
 		body, _ := doc["msg"].(string)
 		urls, _ = doc["message_urls"].([]string)
