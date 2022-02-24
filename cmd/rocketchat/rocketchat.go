@@ -546,6 +546,7 @@ func (j *DSRocketchat) EnrichItem(ctx *shared.Ctx, item map[string]interface{}) 
 	// shared.Printf("raw = %s\n", shared.PrettyPrint(message))
 	rich["msg"], _ = message["msg"]
 	rich["t"], _ = message["t"]
+	rich["hidden"], _ = message["_hidden"]
 	rich["role"], _ = message["role"]
 	rich["rid"], _ = message["rid"]
 	rich["msg_id"], _ = message["_id"]
@@ -731,6 +732,25 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					})
 				}
 				data[k] = ary
+			case "message_deleted":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.MessageDeletedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+				ary := []interface{}{}
+				for _, content := range v {
+					ary = append(ary, rocketchat.MessageDeletedEvent{
+						MessageBaseEvent: messageBaseEvent,
+						BaseEvent:        baseEvent,
+						Payload:          content.(rocketchat.DeleteMessage),
+					})
+				}
+				data[k] = ary
 			case "message_reaction_created":
 				baseEvent := service.BaseEvent{
 					Type: service.EventType(rocketchat.MessageReactionCreatedEvent{}.Event()),
@@ -766,6 +786,25 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 						EventBaseEvent: eventBaseEvent,
 						BaseEvent:      baseEvent,
 						Payload:        event.(rocketchat.CreateEvent),
+					})
+				}
+				data[k] = ary
+			case "event_deleted":
+				baseEvent := service.BaseEvent{
+					Type: service.EventType(rocketchat.EventDeletedEvent{}.Event()),
+					CRUDInfo: service.CRUDInfo{
+						CreatedBy: RocketChatConnector,
+						UpdatedBy: RocketChatConnector,
+						CreatedAt: time.Now().Unix(),
+						UpdatedAt: time.Now().Unix(),
+					},
+				}
+				ary := []interface{}{}
+				for _, event := range v {
+					ary = append(ary, rocketchat.EventDeletedEvent{
+						EventBaseEvent: eventBaseEvent,
+						BaseEvent:      baseEvent,
+						Payload:        event.(rocketchat.DeleteEvent),
 					})
 				}
 				data[k] = ary
@@ -815,6 +854,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 		chanName, _ := doc["channel_name"].(string)
 		chanTopic, _ := doc["channel_topic"].(string)
 		chanUsers, _ := doc["channel_num_users"].(float64)
+		createdOn, _ := doc["created_at"].(time.Time)
 		updatedOn, _ := doc["updated_at"].(time.Time)
 		chanID, err = rocketchat.GenerateRocketChatChannelID(endpoint, chanIID)
 		if err != nil {
@@ -839,6 +879,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				actDt = editedOn
 			}
 		}
+		hidden, _ := doc["hidden"].(bool)
 		// If "t" is non-empty - it means that it is a Rocketchat event, not a message.
 		tData, _ := doc["t"].(string)
 		isEvent := tData != ""
@@ -995,7 +1036,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 									Unicode: emojiContent,
 								},
 								ReactionID:      reactionSID,
-								SourceTimestamp: actDt,
+								SourceTimestamp: updatedOn,
 								SyncTimestamp:   time.Now(),
 								Contributor:     contributor,
 							},
@@ -1024,7 +1065,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 									Unicode: emojiContent,
 								},
 								ReactionID:      reactionSID,
-								SourceTimestamp: actDt,
+								SourceTimestamp: updatedOn,
 								SyncTimestamp:   time.Now(),
 								Contributor:     contributor,
 							},
@@ -1054,7 +1095,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 					return
 				}
 				contributor := insights.Contributor{
-					Role:   insights.MentionAuthorRole,
+					Role:   insights.MentionedRole,
 					Weight: 1.0,
 					Identity: user.UserIdentityObjectBase{
 						ID:         userID,
@@ -1067,6 +1108,15 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				contributors = append(contributors, contributor)
 			}
 		}
+		var dt time.Time
+		if isEdited {
+			// If we want to have SourceTimestamp = editedAt for messages that are edited
+			// dt = actDt
+			// Current request is to use ts
+			dt = createdOn
+		} else {
+			dt = createdOn
+		}
 		if isEvent {
 			event := rocketchat.Event{
 				ID:              eventID,
@@ -1078,7 +1128,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				URLs:            urls,
 				Attachments:     attachments,
 				SyncTimestamp:   time.Now(),
-				SourceTimestamp: updatedOn,
+				SourceTimestamp: dt,
 			}
 			payload := rocketchat.CreateEvent{
 				Event:   event,
@@ -1091,6 +1141,21 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				ary = append(ary, payload)
 			}
 			data[key] = ary
+			if hidden {
+				key = "event_deleted"
+				payload := rocketchat.DeleteEvent{
+					ID:              eventID,
+					SyncTimestamp:   time.Now(),
+					SourceTimestamp: updatedOn,
+				}
+				ary, ok := data[key]
+				if !ok {
+					ary = []interface{}{payload}
+				} else {
+					ary = append(ary, payload)
+				}
+				data[key] = ary
+			}
 		} else {
 			message := rocketchat.Message{
 				ID:              messageID,
@@ -1101,7 +1166,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				URLs:            urls,
 				Attachments:     attachments,
 				SyncTimestamp:   time.Now(),
-				SourceTimestamp: updatedOn,
+				SourceTimestamp: dt,
 			}
 			if key == "message_created" {
 				payload := rocketchat.CreateMessage{
@@ -1119,6 +1184,21 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				payload := rocketchat.EditedMessage{
 					Message: message,
 					Channel: channel,
+				}
+				ary, ok := data[key]
+				if !ok {
+					ary = []interface{}{payload}
+				} else {
+					ary = append(ary, payload)
+				}
+				data[key] = ary
+			}
+			if hidden {
+				key = "message_deleted"
+				payload := rocketchat.DeleteMessage{
+					ID:              messageID,
+					SyncTimestamp:   time.Now(),
+					SourceTimestamp: updatedOn,
 				}
 				ary, ok := data[key]
 				if !ok {
@@ -1168,11 +1248,17 @@ func (j *DSRocketchat) RocketchatEnrichItems(ctx *shared.Ctx, thrN int, items []
 						case "message_edited":
 							ev, _ := v[0].(rocketchat.MessageEditedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "message_deleted":
+							ev, _ := v[0].(rocketchat.MessageDeletedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						case "message_reaction_created":
 							ev, _ := v[0].(rocketchat.MessageReactionCreatedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						case "event_created":
 							ev, _ := v[0].(rocketchat.EventCreatedEvent)
+							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
+						case "event_deleted":
+							ev, _ := v[0].(rocketchat.EventDeletedEvent)
 							err = j.Publisher.PushEvents(ev.Event(), insightsStr, RocketChatDatasource, messageStr, envStr, v)
 						case "event_reaction_created":
 							ev, _ := v[0].(rocketchat.EventReactionCreatedEvent)

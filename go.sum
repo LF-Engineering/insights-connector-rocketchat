@@ -80,6 +80,10 @@ github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224093203-fe91d8a04012 
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224093203-fe91d8a04012/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224152659-db3f123a7df7 h1:DQ2MB4d4/6fyKCkIi4sgENcbDKzSG22TBHDUAzGg+2w=
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224152659-db3f123a7df7/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224172855-58ffa44daf54 h1:nrWKrjKeDuA8k4OTzP11BOqfcY2YiYDe/WVtqUarsPU=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224172855-58ffa44daf54/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224192514-e32030576767 h1:6oc+DjDcDpQlQh7SgwMo+3t2UsIRm+at5tmIOv0D1dk=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224192514-e32030576767/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
