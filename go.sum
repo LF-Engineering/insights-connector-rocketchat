@@ -54,6 +54,8 @@ github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220224122748-323
 github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220224122748-3237fac425d8/go.mod h1:cy/YH2aldmSRGUg9XUe6W+rW+m7p2N8RsSSwyATIe9Y=
 github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220224152615-5ab968e12d13 h1:XGwgMqisSUl+SmXJjHP5PXu/Tvquhiy69a4VA5Kel+8=
 github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220224152615-5ab968e12d13/go.mod h1:cy/YH2aldmSRGUg9XUe6W+rW+m7p2N8RsSSwyATIe9Y=
+github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220309073146-6f42257b2791 h1:G9yMWyDeqCWMwFmCzc5RLCf4NIdccNpgkfjTNPWSkWU=
+github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220309073146-6f42257b2791/go.mod h1:cy/YH2aldmSRGUg9XUe6W+rW+m7p2N8RsSSwyATIe9Y=
 github.com/LF-Engineering/lfx-event-schema v0.1.2 h1:5aG6pQN2+k9i6DAYw/xfooh+tdS3yzGkFYUezo6NkJY=
 github.com/LF-Engineering/lfx-event-schema v0.1.2/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
 github.com/LF-Engineering/lfx-event-schema v0.1.3 h1:ELAU71jb0HkcAqOQZ9K9Hgy5UJvFPfCHK5wicziT3CQ=
@@ -88,6 +90,8 @@ github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224203623-e3396640a3de 
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220224203623-e3396640a3de/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220303123456-81187090092a h1:vBnTJJo0huVrnECm+6yOfmDrBi2h7ePPl+BVKAFVHQw=
 github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220303123456-81187090092a/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220309224940-67adf60a9f3b h1:qFpaYdxhWUOzWdTJTNNLbIfqGyMxQJEIFaGmQtr835M=
+github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220309224940-67adf60a9f3b/go.mod h1:GvEBmXvYGafFRIpZ6I0G5Ss4jsmkBNptLJIasLClXu8=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=

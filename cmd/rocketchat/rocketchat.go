@@ -1731,6 +1731,8 @@ func main() {
 		return
 	}
 	timestamp := time.Now()
+	shared.SetSyncMode(true, false)
+	shared.SetLogLoggerError(false)
 	shared.AddLogger(&rocketchat.Logger, RocketchatDataSource, logger.Internal, []map[string]string{{"ROCKETCHAT_URL": rocketchat.URL, "ROCKETCHAT_CHANNEL": rocketchat.Channel, "ProjectSlug": ctx.Project}})
 	rocketchat.WriteLog(&ctx, timestamp, logger.InProgress, "")
 	err = rocketchat.Sync(&ctx)

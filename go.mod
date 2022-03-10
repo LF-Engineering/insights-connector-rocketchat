@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/LF-Engineering/dev-analytics-libraries v1.1.20
-	github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220224152615-5ab968e12d13
-	github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220303123456-81187090092a
+	github.com/LF-Engineering/insights-datasource-shared v1.4.2-0.20220309073146-6f42257b2791
+	github.com/LF-Engineering/lfx-event-schema v0.1.9-0.20220309224940-67adf60a9f3b
 	github.com/aws/aws-sdk-go v1.42.24
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20210817124755-97fca1753fd7 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
