@@ -137,7 +137,7 @@ func (j *DSRocketchat) AddFlags() {
 	j.FlagToken = flag.String("rocketchat-token", "", "Token: API token")
 	j.FlagMaxItems = flag.Int("rocketchat-max-items", RocketchatDefaultMaxItems, "max items to retrieve from API via a single request - defaults to 100")
 	j.FlagMinRate = flag.Int("rocketchat-min-rate", RocketchatDefaultMinRate, "min API points, if we reach this value we wait for refresh, default 10")
-	j.FlagWaitRate = flag.Bool("rocketchat-wait-rate", false, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached")
+	j.FlagWaitRate = flag.Bool("rocketchat-wait-rate", true, "will wait for rate limit refresh if set, otherwise will fail is rate limit is reached, default is wait")
 	j.FlagStream = flag.String("rocketchat-stream", RocketChatDefaultStream, "rocketchat kinesis stream name, for example PUT-S3-rocketchat")
 }
 
@@ -225,6 +225,7 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 	}
 
 	// Wait Rate
+	j.WaitRate = true
 	if shared.FlagPassed(ctx, "wait-rate") {
 		j.WaitRate = *j.FlagWaitRate
 	}
@@ -232,6 +233,7 @@ func (j *DSRocketchat) ParseArgs(ctx *shared.Ctx) (err error) {
 	if present {
 		j.WaitRate = waitRate
 	}
+	fmt.Printf("Wait for rate: %v\n", j.WaitRate)
 
 	//  rocketchat stream
 	j.Stream = RocketChatDefaultStream
@@ -298,11 +300,19 @@ func (j *DSRocketchat) Init(ctx *shared.Ctx) (err error) {
 
 // CalculateTimeToReset - calculate time to reset rate limits based on rate limit value and rate limit reset value
 func (j *DSRocketchat) CalculateTimeToReset(ctx *shared.Ctx, rateLimit, rateLimitReset int) (seconds int) {
-	seconds = (int(int64(rateLimitReset)-(time.Now().UnixNano()/int64(1000000))) / 1000) + 1
+	seconds = (int(int64(rateLimitReset)-(time.Now().UnixNano()/int64(1000000))) / 1000)
 	if seconds < 0 {
+		shared.Printf(
+			"Rate limit reset in the past: %d, now is %d, (%dms)\n",
+			rateLimitReset,
+			time.Now().UnixNano()/int64(1000000),
+			int(int64(rateLimitReset)-(time.Now().UnixNano()/int64(1000000))),
+		)
 		seconds = 0
+	} else {
+		seconds++
 	}
-	if ctx.Debug > 1 {
+	if ctx.Debug > 0 {
 		shared.Printf("CalculateTimeToReset(%d,%d) -> %d\n", rateLimit, rateLimitReset, seconds)
 	}
 	return
@@ -381,7 +391,7 @@ func (j *DSRocketchat) SleepForRateLimit(ctx *shared.Ctx, rateLimit, rateLimitRe
 		shared.Printf("Waited %d seconds for rate limit reset.\n", secondsToReset)
 		return
 	}
-	err = fmt.Errorf("rate limit exceeded, not waiting %d seconds", secondsToReset)
+	err = fmt.Errorf("rate limit exceeded, not waiting %d seconds (rateLimit=%d, rateLimitReset=%d, minRate=%d, wait: %v)", secondsToReset, rateLimit, rateLimitReset, minRate, waitRate)
 	return
 }
 
