@@ -55,7 +55,7 @@ var (
 	// RocketChatConnector ...
 	RocketChatConnector = "rocketchat-connector"
 	// RocketChatDatasource ...
-	RocketChatDatasource = "rochetchat"
+	RocketChatDatasource = "rocketchat"
 
 	// RocketChatDefaultStream - Default stream to publish
 	RocketChatDefaultStream = "PUT-S3-rocketchat"
