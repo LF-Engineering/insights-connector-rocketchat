@@ -41,7 +41,7 @@ var (
 	// RocketchatDefaultMaxItems - max items to retrieve from API via a single request
 	RocketchatDefaultMaxItems = 100
 	// RocketchatDefaultMinRate - default min rate points (when not set)
-	RocketchatDefaultMinRate = 10
+	RocketchatDefaultMinRate = 1
 	// RocketchatDefaultSearchField - default search field
 	RocketchatDefaultSearchField = "item_id"
 	// MustWaitRE - parse too many requests error message
