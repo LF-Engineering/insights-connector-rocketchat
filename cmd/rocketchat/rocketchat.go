@@ -1135,7 +1135,7 @@ func (j *DSRocketchat) GetModelData(ctx *shared.Ctx, docs []interface{}) (data m
 				ChannelID:       chanID,
 				SourceID:        sourceMessageID,
 				UserName:        body,
-				Type:            tData,
+				Type:            rocketchat.EventType(tData),
 				Contributors:    shared.DedupContributors(contributors),
 				URLs:            urls,
 				Attachments:     attachments,
